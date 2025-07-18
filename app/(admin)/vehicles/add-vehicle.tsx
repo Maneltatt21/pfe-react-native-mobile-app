@@ -1,5 +1,6 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
+import { useTheme } from "@/app/theme/ThemeProvider";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 
 export default function AddVehiculePage() {
+  const { theme } = useTheme(); // 👈 get current theme
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [registration, setRegistration] = useState("");
@@ -21,7 +23,6 @@ export default function AddVehiculePage() {
       return;
     }
 
-    // Here you'd normally send data to your API or state manager
     Alert.alert("Succès", "Véhicule ajouté avec succès !");
     setBrand("");
     setModel("");
@@ -32,32 +33,66 @@ export default function AddVehiculePage() {
     <Container>
       <BackHeader title="Ajouter Véhicule" />
       <View style={styles.form}>
-        <Text style={styles.label}>Marque</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>Marque</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+              color: theme.colors.text,
+            },
+          ]}
           value={brand}
           onChangeText={setBrand}
           placeholder="Ex: Renault"
+          placeholderTextColor={theme.colors.text + "99"}
         />
 
-        <Text style={styles.label}>Modèle</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>Modèle</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+              color: theme.colors.text,
+            },
+          ]}
           value={model}
           onChangeText={setModel}
           placeholder="Ex: Clio"
+          placeholderTextColor={theme.colors.text + "99"}
         />
 
-        <Text style={styles.label}>Numéro d&apos;immatriculation</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Numéro d&apos;immatriculation
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+              color: theme.colors.text,
+            },
+          ]}
           value={registration}
           onChangeText={setRegistration}
           placeholder="Ex: TN-1234-AB"
+          placeholderTextColor={theme.colors.text + "99"}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Ajouter</Text>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: theme.colors.createButton },
+          ]}
+          onPress={handleSubmit}
+        >
+          <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>
+            Ajouter
+          </Text>
         </TouchableOpacity>
       </View>
     </Container>
@@ -72,24 +107,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 5,
-    color: "#333",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,
-    backgroundColor: "#fff",
   },
   button: {
-    backgroundColor: "#4CAF50",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
   },

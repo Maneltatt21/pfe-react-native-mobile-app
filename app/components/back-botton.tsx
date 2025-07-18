@@ -1,7 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from "@/app/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface BackHeaderProps {
   title: string;
@@ -9,13 +10,14 @@ interface BackHeaderProps {
 
 export default function BackHeader({ title }: BackHeaderProps) {
   const router = useRouter();
+  const { theme } = useTheme();
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: theme.colors.appBar }]}>
       <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#333" />
+        <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
       </TouchableOpacity>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
       <View style={styles.backButton} /> {/* spacer to balance */}
     </View>
   );
@@ -23,19 +25,19 @@ export default function BackHeader({ title }: BackHeaderProps) {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   backButton: {
     width: 30,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   title: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

@@ -1,3 +1,4 @@
+import { useTheme } from "@/app/theme/ThemeProvider";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { DrawerItem } from "@react-navigation/drawer";
 import { useRouter } from "expo-router";
@@ -7,63 +8,72 @@ import { Image, StyleSheet, Text, View } from "react-native";
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   const router = useRouter();
+  const { theme } = useTheme();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={[styles.container, { backgroundColor: theme.colors.sidebar }]}>
       {/* Profile section */}
-      <View style={styles.profileContainer}>
+      <View
+        style={[
+          styles.profileContainer,
+          { borderBottomColor: theme.colors.border },
+        ]}
+      >
         <Image
           source={{ uri: "https://i.pravatar.cc/150" }}
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>John Doe</Text>
-        <Text style={styles.profileEmail}>john.doe@example.com</Text>
+        <Text style={[styles.profileName, { color: theme.colors.text }]}>
+          John Doe
+        </Text>
+        <Text style={[styles.profileEmail, { color: theme.colors.text }]}>
+          john.doe@example.com
+        </Text>
       </View>
 
-      {/* Only show drawer items YOU add */}
+      {/* Drawer Items */}
       <DrawerItem
-        label={() => <Text style={styles.label}>Home</Text>}
+        label={() => (
+          <Text style={[styles.label, { color: theme.colors.text }]}>Home</Text>
+        )}
         onPress={() => router.push("../tabs/home")}
       />
-      {/* <DrawerItem
-        label={() => <Text style={styles.label}>Chauffeurs</Text>}
-        onPress={() => router.push("../screens/chauffeurs")}
-      />
       <DrawerItem
-        label={() => <Text style={styles.label}>Assurances</Text>}
-        onPress={() => router.push("../screens/assurances")}
-      />
-      <DrawerItem
-        label={() => <Text style={styles.label}>Contrôle Techniques</Text>}
-        onPress={() => router.push("../screens/controle-techniques")}
-      />
-      <DrawerItem
-        label={() => <Text style={styles.label}>Carte Grise</Text>}
-        onPress={() => router.push("../screens/cart-grise")}
-      />
-      <DrawerItem
-        label={() => <Text style={styles.label}>Substitutions</Text>}
+        label={() => (
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Substitutions
+          </Text>
+        )}
         onPress={() => router.push("../screens/substitutions")}
-      /> */}
+      />
     </View>
   );
 };
 
-export default function driverLayout() {
+export default function DriverLayout() {
+  const { theme } = useTheme();
+
   return (
     <Drawer
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        drawerStyle: {
+          backgroundColor: theme.colors.sidebar,
+        },
+      }}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     />
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   profileContainer: {
     paddingVertical: 40,
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
     marginBottom: 10,
   },
   profileImage: {
@@ -78,10 +88,8 @@ const styles = StyleSheet.create({
   },
   profileEmail: {
     fontSize: 14,
-    color: "#666",
   },
   label: {
     fontSize: 16,
-    color: "#333",
   },
 });

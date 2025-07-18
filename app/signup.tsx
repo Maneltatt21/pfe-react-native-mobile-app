@@ -1,4 +1,4 @@
-// app/signup.tsx
+import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -16,6 +16,7 @@ import {
 
 export default function Signup() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -102,31 +103,49 @@ export default function Signup() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join us and get started</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Create Account
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.text }]}>
+            Join us and get started
+          </Text>
         </View>
 
-        <View style={styles.form}>
+        <View style={[styles.form, { backgroundColor: theme.colors.card }]}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Full Name
+            </Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
+            >
               <Ionicons
                 name="person-outline"
                 size={20}
-                color="#666"
+                color={theme.colors.text}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Enter your full name"
+                placeholderTextColor={theme.colors.border}
                 value={formData.fullName}
                 onChangeText={(value) => handleInputChange("fullName", value)}
                 autoCapitalize="words"
@@ -137,17 +156,28 @@ export default function Signup() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Email
+            </Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
+            >
               <Ionicons
                 name="mail-outline"
                 size={20}
-                color="#666"
+                color={theme.colors.text}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Enter your email"
+                placeholderTextColor={theme.colors.border}
                 value={formData.email}
                 onChangeText={(value) => handleInputChange("email", value)}
                 keyboardType="email-address"
@@ -159,17 +189,28 @@ export default function Signup() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Password
+            </Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
+            >
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color="#666"
+                color={theme.colors.text}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Enter your password"
+                placeholderTextColor={theme.colors.border}
                 value={formData.password}
                 onChangeText={(value) => handleInputChange("password", value)}
                 secureTextEntry={!showPassword}
@@ -184,24 +225,35 @@ export default function Signup() {
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
                   size={20}
-                  color="#666"
+                  color={theme.colors.text}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Confirm Password
+            </Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
+            >
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color="#666"
+                color={theme.colors.text}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Confirm your password"
+                placeholderTextColor={theme.colors.border}
                 value={formData.confirmPassword}
                 onChangeText={(value) =>
                   handleInputChange("confirmPassword", value)
@@ -218,19 +270,28 @@ export default function Signup() {
                 <Ionicons
                   name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
                   size={20}
-                  color="#666"
+                  color={theme.colors.text}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>I am a</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              I am a
+            </Text>
             <View style={styles.roleSelection}>
               <TouchableOpacity
                 style={[
                   styles.roleOption,
-                  formData.role === "driver" && styles.roleOptionSelected,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.card,
+                  },
+                  formData.role === "driver" && {
+                    borderColor: theme.colors.editButton,
+                    backgroundColor: theme.colors.card,
+                  },
                 ]}
                 onPress={() => handleInputChange("role", "driver")}
                 disabled={isLoading}
@@ -238,12 +299,20 @@ export default function Signup() {
                 <Ionicons
                   name="car-outline"
                   size={24}
-                  color={formData.role === "driver" ? "#2196F3" : "#666"}
+                  color={
+                    formData.role === "driver"
+                      ? theme.colors.editButton
+                      : theme.colors.text
+                  }
                 />
                 <Text
                   style={[
                     styles.roleOptionText,
-                    formData.role === "driver" && styles.roleOptionTextSelected,
+                    { color: theme.colors.text },
+                    formData.role === "driver" && {
+                      color: theme.colors.editButton,
+                      fontWeight: "600",
+                    },
                   ]}
                 >
                   Driver
@@ -253,7 +322,14 @@ export default function Signup() {
               <TouchableOpacity
                 style={[
                   styles.roleOption,
-                  formData.role === "admin" && styles.roleOptionSelected,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.card,
+                  },
+                  formData.role === "admin" && {
+                    borderColor: theme.colors.primary,
+                    backgroundColor: theme.colors.card,
+                  },
                 ]}
                 onPress={() => handleInputChange("role", "admin")}
                 disabled={isLoading}
@@ -261,12 +337,20 @@ export default function Signup() {
                 <Ionicons
                   name="shield-outline"
                   size={24}
-                  color={formData.role === "admin" ? "#4CAF50" : "#666"}
+                  color={
+                    formData.role === "admin"
+                      ? theme.colors.primary
+                      : theme.colors.text
+                  }
                 />
                 <Text
                   style={[
                     styles.roleOptionText,
-                    formData.role === "admin" && styles.roleOptionTextSelected,
+                    { color: theme.colors.text },
+                    formData.role === "admin" && {
+                      color: theme.colors.primary,
+                      fontWeight: "600",
+                    },
                   ]}
                 >
                   Admin
@@ -278,21 +362,30 @@ export default function Signup() {
           <TouchableOpacity
             style={[
               styles.signupButton,
-              isLoading && styles.signupButtonDisabled,
+              { backgroundColor: theme.colors.primary },
+              isLoading && { backgroundColor: theme.colors.button },
             ]}
             onPress={handleSignup}
             disabled={isLoading}
           >
-            <Text style={styles.signupButtonText}>
+            <Text
+              style={[
+                styles.signupButtonText,
+                { color: theme.colors.buttonText },
+              ]}
+            >
               {isLoading ? "Creating Account..." : "Create Account"}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: theme.colors.text }]}>
             Already have an account?{" "}
-            <Text style={styles.signinLink} onPress={() => router.replace("/")}>
+            <Text
+              style={[styles.signinLink, { color: theme.colors.primary }]}
+              onPress={() => router.replace("/")}
+            >
               Sign in
             </Text>
           </Text>
@@ -305,7 +398,6 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -326,15 +418,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
   },
   form: {
-    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 24,
     shadowColor: "#000",
@@ -352,16 +441,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
-    backgroundColor: "#f8f9fa",
   },
   inputIcon: {
     marginLeft: 12,
@@ -371,7 +457,6 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: "#333",
   },
   eyeIcon: {
     padding: 12,
@@ -387,38 +472,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#ddd",
     borderRadius: 8,
     padding: 16,
-    backgroundColor: "#f8f9fa",
   },
-  roleOptionSelected: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#f0f8f0",
-  },
+  roleOptionSelected: {},
   roleOptionText: {
     marginLeft: 8,
     fontSize: 16,
     fontWeight: "500",
-    color: "#666",
   },
   roleOptionTextSelected: {
-    color: "#333",
     fontWeight: "600",
   },
   signupButton: {
-    backgroundColor: "#4CAF50",
     borderRadius: 8,
     height: 48,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 8,
   },
-  signupButtonDisabled: {
-    backgroundColor: "#ccc",
-  },
+  signupButtonDisabled: {},
   signupButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -428,10 +502,8 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: "#666",
   },
   signinLink: {
-    color: "#4CAF50",
     fontWeight: "600",
   },
 });

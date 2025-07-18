@@ -1,35 +1,38 @@
-// app/index.tsx
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useTheme } from "@/app/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
+import { ROUTES } from "../app/config/routes";
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { theme } = useTheme();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     // Basic validation
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
-    if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    if (!email.includes("@")) {
+      Alert.alert("Error", "Please enter a valid email address");
       return;
     }
 
@@ -38,16 +41,16 @@ export default function Login() {
     try {
       // TODO: Implement actual authentication logic here
       // For now, we'll simulate login based on email domain
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
 
-      if (email.toLowerCase().includes('admin')) {
-        router.replace('/(admin)/tabs/dashbord' as any);
+      if (email.toLowerCase().includes("admin")) {
+        router.replace(ROUTES.ADMIN.DASHBOARD);
       } else {
-        router.replace('/(driver)/tabs/home' as any);
+        router.replace(ROUTES.CHAUFFEUR.HOME);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      Alert.alert('Error', 'Login failed. Please try again.');
+      console.error("Login error:", error);
+      Alert.alert("Error", "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -55,26 +58,52 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <StatusBar
+        backgroundColor={theme.colors.background} // status bar background
+      />
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Welcome Back
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.text }]}>
+            Sign in to your account
+          </Text>
         </View>
 
-        <View style={styles.form}>
+        <View style={[styles.form, { backgroundColor: theme.colors.card }]}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Email
+            </Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
+            >
+              <Ionicons
+                name="mail-outline"
+                size={20}
+                color={theme.colors.text}
+                style={styles.inputIcon}
+              />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Enter your email"
+                placeholderTextColor={theme.colors.border}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -86,12 +115,28 @@ export default function Login() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Password
+            </Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color={theme.colors.text}
+                style={styles.inputIcon}
+              />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Enter your password"
+                placeholderTextColor={theme.colors.border}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -106,59 +151,111 @@ export default function Login() {
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
                   size={20}
-                  color="#666"
+                  color={theme.colors.text}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+            style={[
+              styles.loginButton,
+              { backgroundColor: theme.colors.primary },
+              isLoading && { backgroundColor: theme.colors.primary },
+            ]}
             onPress={handleLogin}
             disabled={isLoading}
           >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
+            <Text
+              style={[
+                styles.loginButtonText,
+                { color: theme.colors.buttonText },
+              ]}
+            >
+              {isLoading ? "Signing In..." : "Sign In"}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
-            <View style={styles.dividerLine} />
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
+            <Text style={[styles.dividerText, { color: theme.colors.text }]}>
+              or continue with
+            </Text>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
           </View>
 
           <View style={styles.roleButtons}>
             <TouchableOpacity
-              style={styles.roleButton}
+              style={[
+                styles.roleButton,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
               onPress={() => {
-                setEmail('admin@example.com');
-                setPassword('password');
+                setEmail("admin@example.com");
+                setPassword("password");
               }}
               disabled={isLoading}
             >
-              <Ionicons name="shield-outline" size={24} color="#4CAF50" />
-              <Text style={styles.roleButtonText}>Demo Admin</Text>
+              <Ionicons
+                name="shield-outline"
+                size={24}
+                color={theme.colors.primary}
+              />
+              <Text
+                style={[styles.roleButtonText, { color: theme.colors.text }]}
+              >
+                Demo Admin
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.roleButton}
+              style={[
+                styles.roleButton,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.card,
+                },
+              ]}
               onPress={() => {
-                setEmail('driver@example.com');
-                setPassword('password');
+                setEmail("driver@example.com");
+                setPassword("password");
               }}
               disabled={isLoading}
             >
-              <Ionicons name="car-outline" size={24} color="#2196F3" />
-              <Text style={styles.roleButtonText}>Demo Driver</Text>
+              <Ionicons
+                name="car-outline"
+                size={24}
+                color={theme.colors.editButton}
+              />
+              <Text
+                style={[styles.roleButtonText, { color: theme.colors.text }]}
+              >
+                Demo Driver
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Don&apos;t have an account?{' '}
-            <Text style={styles.signupLink} onPress={() => router.push('/signup')}>
+          <Text style={[styles.footerText, { color: theme.colors.text }]}>
+            Don&apos;t have an account?{" "}
+            <Text
+              style={[styles.signupLink, { color: theme.colors.primary }]}
+              onPress={() => router.push("/signup")}
+            >
               Sign up
             </Text>
           </Text>
@@ -171,32 +268,28 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 40,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
   },
   form: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 24,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -210,17 +303,14 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
     marginBottom: 8,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
   },
   inputIcon: {
     marginLeft: 12,
@@ -230,74 +320,62 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: '#333',
   },
   eyeIcon: {
     padding: 12,
   },
   loginButton: {
-    backgroundColor: '#4CAF50',
     borderRadius: 8,
     height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 8,
   },
-  loginButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
+  loginButtonDisabled: {},
   loginButtonText: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#ddd',
   },
   dividerText: {
     marginHorizontal: 16,
     fontSize: 14,
-    color: '#666',
   },
   roleButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     gap: 12,
   },
   roleButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
-    backgroundColor: '#f8f9fa',
   },
   roleButtonText: {
     marginLeft: 8,
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 24,
   },
   footerText: {
     fontSize: 14,
-    color: '#666',
   },
   signupLink: {
-    color: '#4CAF50',
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

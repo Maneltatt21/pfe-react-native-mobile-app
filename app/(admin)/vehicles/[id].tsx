@@ -1,55 +1,69 @@
 import BackHeader from "@/app/components/back-botton";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import Container from "@/app/components/container";
+import { useTheme } from "@/app/theme/ThemeProvider";
+import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+
 export const unstable_settings = {
   drawer: null,
 };
+
 export default function VehicleDetailPage() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
+  const { theme } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <Container>
       <BackHeader title="Frigo" />
 
-      <View style={styles.detailBox}>
-        <Text style={styles.label}>
-          ID: <Text style={styles.value}>{id}</Text>
+      <View style={[styles.detailBox, { backgroundColor: theme.colors.card }]}>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          ID:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            {id}
+          </Text>
         </Text>
-        <Text style={styles.label}>
-          Type: <Text style={styles.value}>Frigo</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Type:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            Frigo
+          </Text>
         </Text>
-        <Text style={styles.label}>
-          Modèle: <Text style={styles.value}>Earum</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Modèle:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            Earum
+          </Text>
         </Text>
-        <Text style={styles.label}>
-          Statut: <Text style={styles.value}>Disponible</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Statut:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            Disponible
+          </Text>
         </Text>
-        <Text style={styles.label}>
-          N°: <Text style={styles.value}>456</Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          N°:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            456
+          </Text>
         </Text>
       </View>
-    </View>
+    </Container>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  backButton: { marginBottom: 20 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#333" },
   detailBox: {
-    backgroundColor: "#f9f9f9",
     padding: 16,
     borderRadius: 12,
     elevation: 2,
+    marginTop: 20,
   },
   label: {
     fontSize: 16,
-    color: "#555",
     marginBottom: 10,
   },
   value: {
     fontWeight: "bold",
-    color: "#000",
   },
 });

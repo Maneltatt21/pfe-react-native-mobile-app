@@ -8,7 +8,7 @@ export const ROUTES = {
 
   // Admin routes
   ADMIN: {
-    DASHBOARD: "AdminDashboard",
+    DASHBOARD: "/(admin)/tabs/dashbord" as const,
     CARS: "AdminCars",
     CAR_DETAILS: "AdminCarDetails",
     CAR_CREATE: "AdminCarCreate",
@@ -34,7 +34,7 @@ export const ROUTES = {
 
   // Chauffeur/Driver routes
   CHAUFFEUR: {
-    HOME: "ChauffeurHome",
+    HOME: "/(driver)/tabs/home" as const,
     MY_VEHICLES: "ChauffeurMyVehicles",
     VEHICLE_DETAILS: "ChauffeurVehicleDetails",
     ASSIGNED_RIDES: "ChauffeurAssignedRides",

@@ -1,3 +1,4 @@
+import { useTheme } from "@/app/theme/ThemeProvider"; // <-- import useTheme
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface ComingSoonProps {
@@ -13,12 +14,21 @@ export default function ComingSoon({
   buttonText = "Go Back",
   onPress,
 }: ComingSoonProps) {
+  const { theme } = useTheme(); // <-- get theme
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Text style={styles.emoji}>🚧</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{message}</Text>
-      <TouchableOpacity style={styles.button} onPress={onPress}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.text }]}>
+        {message}
+      </Text>
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: theme.colors.primary }]}
+        onPress={onPress}
+      >
         <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
     </View>
@@ -28,7 +38,6 @@ export default function ComingSoon({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F4F4",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
@@ -41,18 +50,15 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "600",
     marginBottom: 8,
-    color: "#333",
     textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
     textAlign: "center",
     marginBottom: 20,
     paddingHorizontal: 12,
   },
   button: {
-    backgroundColor: "#4CAF50",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

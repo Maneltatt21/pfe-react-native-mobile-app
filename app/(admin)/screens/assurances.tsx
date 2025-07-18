@@ -1,47 +1,68 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "@/app/theme/ThemeProvider";
+import { useLocalSearchParams } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
 
-const assurances = [
-  { id: "1", company: "Assurance Tunisienne", policyNumber: "AT-123456" },
-  { id: "2", company: "Société d Assurance", policyNumber: "SA-987654" },
-  { id: "3", company: "Assurances Globales", policyNumber: "AG-456789" },
-];
+export const unstable_settings = {
+  drawer: null,
+};
 
-export default function AssurancesPage() {
+export default function VehicleDetailPage() {
+  const { id } = useLocalSearchParams();
+  const { theme } = useTheme();
+
   return (
     <Container>
-      <BackHeader title="Assurances" />
-      <FlatList
-        data={assurances}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.company}>{item.company}</Text>
-            <Text style={styles.policy}>Policy #: {item.policyNumber}</Text>
-          </View>
-        )}
-        contentContainerStyle={{ paddingTop: 10 }}
-      />
+      <BackHeader title="Frigo" />
+      <View style={[styles.detailBox, { backgroundColor: theme.colors.card }]}>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          ID:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            {id}
+          </Text>
+        </Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Type:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            Frigo
+          </Text>
+        </Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Modèle:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            Earum
+          </Text>
+        </Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          Statut:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            Disponible
+          </Text>
+        </Text>
+        <Text style={[styles.label, { color: theme.colors.text }]}>
+          N°:{" "}
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            456
+          </Text>
+        </Text>
+      </View>
     </Container>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: "#f2f2f2",
+  detailBox: {
+    padding: 16,
+    borderRadius: 12,
+    elevation: 2,
+    marginTop: 20,
+  },
+  label: {
+    fontSize: 16,
     marginBottom: 10,
   },
-  company: {
-    fontSize: 18,
-    fontWeight: "500",
-  },
-  policy: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
+  value: {
+    fontWeight: "bold",
   },
 });

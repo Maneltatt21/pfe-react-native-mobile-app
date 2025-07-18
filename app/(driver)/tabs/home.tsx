@@ -1,4 +1,5 @@
 import ConfirmModal from "@/app/components/confirm-model";
+import { useTheme } from "@/app/theme/ThemeProvider"; // make sure path is correct
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useNavigation } from "@react-navigation/native";
@@ -21,6 +22,7 @@ type DrawerParamList = {
 export default function Home() {
   const router = useRouter();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
+  const { theme } = useTheme();
 
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -37,17 +39,20 @@ export default function Home() {
 
   return (
     <Pressable
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       onPress={() => dropdownVisible && setDropdownVisible(false)}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: theme.colors.appBar }]}>
           <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <Ionicons name="menu" size={28} color="black" />
+            <Ionicons name="menu" size={28} color={theme.colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.avatarContainer}
+            style={[
+              styles.avatarContainer,
+              { backgroundColor: theme.colors.card },
+            ]}
             onPress={toggleDropdown}
           >
             <Image
@@ -55,17 +60,36 @@ export default function Home() {
               style={styles.avatar}
             />
             <View style={styles.driverLabelContainer}>
-              <Text style={styles.driverLabel}>Driver</Text>
-              <Ionicons name="chevron-down" size={18} color="#333" />
+              <Text style={[styles.driverLabel, { color: theme.colors.text }]}>
+                Driver
+              </Text>
+              <Ionicons
+                name="chevron-down"
+                size={18}
+                color={theme.colors.text}
+              />
             </View>
           </TouchableOpacity>
         </View>
 
         {dropdownVisible && (
-          <Pressable style={styles.dropdown}>
+          <Pressable
+            style={[styles.dropdown, { backgroundColor: theme.colors.card }]}
+          >
             <Pressable onPress={handleLogout} style={styles.dropdownItem}>
-              <Ionicons name="log-out-outline" size={20} color="#e74c3c" />
-              <Text style={styles.logoutText}>Logout</Text>
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={theme.colors.deleteButton}
+              />
+              <Text
+                style={[
+                  styles.logoutText,
+                  { color: theme.colors.deleteButton },
+                ]}
+              >
+                Logout
+              </Text>
             </Pressable>
           </Pressable>
         )}
@@ -87,8 +111,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-    backgroundColor: "#F9F9F9",
+    paddingTop: 16,
   },
   scrollContainer: {
     justifyContent: "flex-start",
@@ -105,7 +128,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 8,
     borderRadius: 16,
-    backgroundColor: "#fff",
     elevation: 2,
   },
   avatar: {
@@ -121,7 +143,6 @@ const styles = StyleSheet.create({
   driverLabel: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
     marginRight: 4,
   },
   dropdown: {
@@ -129,7 +150,6 @@ const styles = StyleSheet.create({
     top: 60,
     right: 16,
     width: 150,
-    backgroundColor: "#fff",
     borderRadius: 16,
     elevation: 4,
     padding: 8,
@@ -142,7 +162,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     marginLeft: 8,
-    color: "#e74c3c",
     fontWeight: "600",
     fontSize: 16,
   },
