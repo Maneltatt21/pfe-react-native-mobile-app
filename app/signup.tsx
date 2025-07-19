@@ -1,9 +1,10 @@
+import { ROUTES } from "@/app/config/routes";
 import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,58 +14,75 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "./components/authProvider";
 
 export default function Signup() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { register, user, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "driver", // default role
+    role: "chauffeur", // Default role
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    setError(""); // Clear error on input change
+  };
+
+  const getFriendlyErrorMessage = (error: string) => {
+    switch (error) {
+      case "Please fill in all fields":
+        return "Please enter full name, email, password, confirm password, and select a role.";
+      case "Invalid email format":
+        return "Please enter a valid email address.";
+      case "Password too short":
+        return "Password must be at least 6 characters long.";
+      case "Passwords do not match":
+        return "Passwords do not match. Please ensure both passwords are identical.";
+      case "User already exists":
+        return "This email is already registered. Please use a different email.";
+      default:
+        return "Failed to create account. Please try again.";
+    }
   };
 
   const validateForm = () => {
     const { fullName, email, password, confirmPassword } = formData;
 
-    if (!fullName.trim()) {
-      Alert.alert("Error", "Please enter your full name");
-      return false;
-    }
-
-    if (!email.trim()) {
-      Alert.alert("Error", "Please enter your email");
+    if (
+      !fullName.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirmPassword.trim() ||
+      !formData.role
+    ) {
+      setError("Please fill in all fields");
       return false;
     }
 
     if (!email.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return false;
-    }
-
-    if (!password.trim()) {
-      Alert.alert("Error", "Please enter a password");
+      setError("Invalid email format");
       return false;
     }
 
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      setError("Password too short");
       return false;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      setError("Passwords do not match");
       return false;
     }
 
@@ -77,35 +95,41 @@ export default function Signup() {
     }
 
     setIsLoading(true);
+    setError("");
 
     try {
-      // TODO: Implement actual signup logic here
-      // For now, we'll simulate signup
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
-
-      Alert.alert(
-        "Success",
-        "Account created successfully! You can now sign in.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/"),
-          },
-        ]
+      const success = await register(
+        formData.fullName,
+        formData.email,
+        formData.password,
+        formData.confirmPassword,
+        formData.role
       );
-    } catch (error) {
-      console.error("Signup error:", error);
-      Alert.alert("Error", "Failed to create account. Please try again.");
+
+      if (!success) {
+        setError("User already exists");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user && !authLoading && !isLoading) {
+      const destination =
+        user.role === "admin" ? ROUTES.ADMIN.DASHBOARD : ROUTES.CHAUFFEUR.HOME;
+      router.replace(destination);
+    }
+  }, [user, authLoading, isLoading, router]);
 
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <StatusBar backgroundColor={theme.colors.background} />
       <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
@@ -150,7 +174,7 @@ export default function Signup() {
                 onChangeText={(value) => handleInputChange("fullName", value)}
                 autoCapitalize="words"
                 autoCorrect={false}
-                editable={!isLoading}
+                editable={!isLoading && !authLoading}
               />
             </View>
           </View>
@@ -183,7 +207,7 @@ export default function Signup() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!isLoading}
+                editable={!isLoading && !authLoading}
               />
             </View>
           </View>
@@ -216,7 +240,7 @@ export default function Signup() {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!isLoading}
+                editable={!isLoading && !authLoading}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -261,7 +285,7 @@ export default function Signup() {
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!isLoading}
+                editable={!isLoading && !authLoading}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -286,36 +310,37 @@ export default function Signup() {
                   styles.roleOption,
                   {
                     borderColor: theme.colors.border,
-                    backgroundColor: theme.colors.card,
-                  },
-                  formData.role === "driver" && {
-                    borderColor: theme.colors.editButton,
-                    backgroundColor: theme.colors.card,
+                    backgroundColor:
+                      formData.role === "chauffeur"
+                        ? theme.colors.primary
+                        : theme.colors.card,
                   },
                 ]}
-                onPress={() => handleInputChange("role", "driver")}
-                disabled={isLoading}
+                onPress={() => handleInputChange("role", "chauffeur")}
+                disabled={isLoading || authLoading}
               >
                 <Ionicons
                   name="car-outline"
                   size={24}
                   color={
-                    formData.role === "driver"
-                      ? theme.colors.editButton
+                    formData.role === "chauffeur"
+                      ? theme.colors.buttonText
                       : theme.colors.text
                   }
                 />
                 <Text
                   style={[
                     styles.roleOptionText,
-                    { color: theme.colors.text },
-                    formData.role === "driver" && {
-                      color: theme.colors.editButton,
-                      fontWeight: "600",
+                    {
+                      color:
+                        formData.role === "chauffeur"
+                          ? theme.colors.buttonText
+                          : theme.colors.text,
                     },
+                    formData.role === "chauffeur" && { fontWeight: "600" },
                   ]}
                 >
-                  Driver
+                  Chauffeur
                 </Text>
               </TouchableOpacity>
 
@@ -324,33 +349,34 @@ export default function Signup() {
                   styles.roleOption,
                   {
                     borderColor: theme.colors.border,
-                    backgroundColor: theme.colors.card,
-                  },
-                  formData.role === "admin" && {
-                    borderColor: theme.colors.primary,
-                    backgroundColor: theme.colors.card,
+                    backgroundColor:
+                      formData.role === "admin"
+                        ? theme.colors.primary
+                        : theme.colors.card,
                   },
                 ]}
                 onPress={() => handleInputChange("role", "admin")}
-                disabled={isLoading}
+                disabled={isLoading || authLoading}
               >
                 <Ionicons
                   name="shield-outline"
                   size={24}
                   color={
                     formData.role === "admin"
-                      ? theme.colors.primary
+                      ? theme.colors.buttonText
                       : theme.colors.text
                   }
                 />
                 <Text
                   style={[
                     styles.roleOptionText,
-                    { color: theme.colors.text },
-                    formData.role === "admin" && {
-                      color: theme.colors.primary,
-                      fontWeight: "600",
+                    {
+                      color:
+                        formData.role === "admin"
+                          ? theme.colors.buttonText
+                          : theme.colors.text,
                     },
+                    formData.role === "admin" && { fontWeight: "600" },
                   ]}
                 >
                   Admin
@@ -359,14 +385,42 @@ export default function Signup() {
             </View>
           </View>
 
+          {error && (
+            <View
+              style={[
+                styles.errorContainer,
+                {
+                  backgroundColor: theme.colors.deleteButton
+                    ? `${theme.colors.deleteButton}80`
+                    : "rgba(255, 0, 0, 0.5)",
+                },
+              ]}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={20}
+                color={theme.colors.deleteButton || "red"}
+                style={styles.errorIcon}
+              />
+              <Text
+                style={[
+                  styles.errorText,
+                  { color: theme.colors.deleteButton || "red" },
+                ]}
+              >
+                {getFriendlyErrorMessage(error)}
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={[
               styles.signupButton,
               { backgroundColor: theme.colors.primary },
-              isLoading && { backgroundColor: theme.colors.button },
+              (isLoading || authLoading) && { opacity: 0.7 },
             ]}
             onPress={handleSignup}
-            disabled={isLoading}
+            disabled={isLoading || authLoading}
           >
             <Text
               style={[
@@ -374,7 +428,9 @@ export default function Signup() {
                 { color: theme.colors.buttonText },
               ]}
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading || authLoading
+                ? "Creating Account..."
+                : "Create Account"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -407,13 +463,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 40,
-    position: "relative",
-  },
-  backButton: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    padding: 8,
   },
   title: {
     fontSize: 28,
@@ -427,10 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 24,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
@@ -475,14 +521,26 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
   },
-  roleOptionSelected: {},
   roleOptionText: {
     marginLeft: 8,
     fontSize: 16,
     fontWeight: "500",
   },
-  roleOptionTextSelected: {
-    fontWeight: "600",
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  errorIcon: {
+    marginRight: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    flex: 1,
+    textAlign: "center",
   },
   signupButton: {
     borderRadius: 8,
@@ -491,7 +549,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  signupButtonDisabled: {},
   signupButtonText: {
     fontSize: 16,
     fontWeight: "600",
@@ -507,3 +564,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
+// TODO: Remove or secure demo credentials in production if used

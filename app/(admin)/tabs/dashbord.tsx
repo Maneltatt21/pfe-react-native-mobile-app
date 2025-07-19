@@ -1,3 +1,4 @@
+import { useAuth } from "@/app/components/authProvider";
 import ConfirmModal from "@/app/components/confirm-model";
 import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,22 +20,27 @@ type DrawerParamList = {
   Home: undefined;
 };
 
-export default function AdminDashbord() {
+export default function AdminDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { logout, user } = useAuth();
 
   const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
   const handleLogout = () => {
-    setShowLogoutModal(true); // show the custom modal
+    setShowLogoutModal(true);
   };
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setShowLogoutModal(false);
-    router.replace("/");
-    console.log("Logging out...");
+    try {
+      await logout();
+      router.replace("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   const vehicles = Array.from({ length: 15 }, (_, i) => ({
@@ -67,7 +73,9 @@ export default function AdminDashbord() {
             />
             <View style={styles.adminLabelContainer}>
               <Text style={[styles.adminLabel, { color: theme.colors.text }]}>
-                Admin
+                {user?.name
+                  ? user.name.charAt(0).toUpperCase() + user.name.slice(1)
+                  : "Admin"}
               </Text>
               <Ionicons
                 name="chevron-down"

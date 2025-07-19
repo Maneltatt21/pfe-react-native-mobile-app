@@ -1,9 +1,8 @@
 import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,55 +13,75 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ROUTES } from "../app/config/routes";
+import { useAuth } from "./components/authProvider";
+import { ROUTES } from "./config/routes";
 
 export default function Login() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { login, user, isLoading: authLoading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Navigate based on user role when user state updates
+  useEffect(() => {
+    if (user && !authLoading) {
+      const destination =
+        user.role === "admin" ? ROUTES.ADMIN.DASHBOARD : ROUTES.CHAUFFEUR.HOME;
+      router.replace(destination);
+    }
+  }, [user, authLoading, router]);
 
   const handleLogin = async () => {
-    // Basic validation
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     }
 
     if (!email.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
+      setError("Please enter a valid email address");
       return;
     }
 
-    setIsLoading(true);
-
+    setLoading(true);
+    setError("");
     try {
-      // TODO: Implement actual authentication logic here
-      // For now, we'll simulate login based on email domain
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
-
-      if (email.toLowerCase().includes("admin")) {
-        router.replace(ROUTES.ADMIN.DASHBOARD);
-      } else {
-        router.replace(ROUTES.CHAUFFEUR.HOME);
+      const success = await login(email, password);
+      if (!success) {
+        setError("Invalid credentials");
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      Alert.alert("Error", "Login failed. Please try again.");
+      // Navigation is handled in useEffect
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
+  const getFriendlyErrorMessage = (error: string) => {
+    switch (error) {
+      case "Please fill in all fields":
+        return "Please enter both email and password.";
+      case "Invalid credentials":
+        return "Incorrect email or password.";
+      case "Login failed. Please try again.":
+        return "Something went wrong.";
+      default:
+        return error; // Fallback to original error if no mapping exists
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <StatusBar
-        backgroundColor={theme.colors.background} // status bar background
+        backgroundColor={theme.colors.background}
+        barStyle={
+          theme.colors.background === "#fff" ? "dark-content" : "light-content"
+        }
       />
       <ScrollView
         contentContainerStyle={[
@@ -109,7 +128,7 @@ export default function Login() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!isLoading}
+                editable={!loading && !authLoading}
               />
             </View>
           </View>
@@ -142,7 +161,7 @@ export default function Login() {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
-                editable={!isLoading}
+                editable={!loading && !authLoading}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -157,14 +176,42 @@ export default function Login() {
             </View>
           </View>
 
+          {error && (
+            <View
+              style={[
+                styles.errorContainer,
+                {
+                  backgroundColor: theme.colors.deleteButton
+                    ? `${theme.colors.deleteButton}80` // 0.5 opacity (80 in hex = 0.5)
+                    : "rgba(255, 0, 0, 0.5)", // Fallback to red with 0.5 opacity
+                },
+              ]}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={20}
+                color={theme.colors.deleteButton || "red"}
+                style={styles.errorIcon}
+              />
+              <Text
+                style={[
+                  styles.errorText,
+                  { color: theme.colors.deleteButton || "red" },
+                ]}
+              >
+                {getFriendlyErrorMessage(error)}
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={[
               styles.loginButton,
               { backgroundColor: theme.colors.primary },
-              isLoading && { backgroundColor: theme.colors.primary },
+              (loading || authLoading) && { opacity: 0.7 },
             ]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={loading || authLoading}
           >
             <Text
               style={[
@@ -172,7 +219,7 @@ export default function Login() {
                 { color: theme.colors.buttonText },
               ]}
             >
-              {isLoading ? "Signing In..." : "Sign In"}
+              {loading || authLoading ? "Signing In..." : "Sign In"}
             </Text>
           </TouchableOpacity>
 
@@ -207,7 +254,7 @@ export default function Login() {
                 setEmail("admin@example.com");
                 setPassword("password");
               }}
-              disabled={isLoading}
+              disabled={loading || authLoading}
             >
               <Ionicons
                 name="shield-outline"
@@ -233,7 +280,7 @@ export default function Login() {
                 setEmail("driver@example.com");
                 setPassword("password");
               }}
-              disabled={isLoading}
+              disabled={loading || authLoading}
             >
               <Ionicons
                 name="car-outline"
@@ -324,6 +371,22 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 12,
   },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  errorIcon: {
+    marginRight: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    flex: 1,
+    textAlign: "center",
+  },
   loginButton: {
     borderRadius: 8,
     height: 48,
@@ -331,7 +394,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  loginButtonDisabled: {},
   loginButtonText: {
     fontSize: 16,
     fontWeight: "600",
@@ -379,3 +441,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
+// TODO: Remove or secure demo credentials (admin@example.com, driver@example.com) in production

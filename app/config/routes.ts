@@ -1,4 +1,4 @@
-// Route configuration for the app
+// config/routes.ts
 export const ROUTES = {
   // Auth routes
   AUTH: {

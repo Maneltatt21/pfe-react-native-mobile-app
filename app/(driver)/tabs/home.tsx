@@ -1,3 +1,4 @@
+import { useAuth } from "@/app/components/authProvider";
 import ConfirmModal from "@/app/components/confirm-model";
 import { useTheme } from "@/app/theme/ThemeProvider"; // make sure path is correct
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,7 @@ export default function Home() {
   const router = useRouter();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const { theme } = useTheme();
+  const { logout, user } = useAuth();
 
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -31,10 +33,14 @@ export default function Home() {
 
   const handleLogout = () => setShowLogoutModal(true);
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setShowLogoutModal(false);
-    router.replace("/");
-    console.log("Logging out...");
+    try {
+      await logout();
+      router.replace("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   return (
@@ -61,7 +67,9 @@ export default function Home() {
             />
             <View style={styles.driverLabelContainer}>
               <Text style={[styles.driverLabel, { color: theme.colors.text }]}>
-                Driver
+                {user?.name
+                  ? user.name.charAt(0).toUpperCase() + user.name.slice(1)
+                  : "Driver"}
               </Text>
               <Ionicons
                 name="chevron-down"

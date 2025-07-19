@@ -1,3 +1,4 @@
+// components/theme/ThemeProvider.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
@@ -6,27 +7,10 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Appearance } from "react-native";
+import { Alert, Appearance } from "react-native";
 import { darkTheme, lightTheme } from ".";
 
-type Theme = {
-  colors: {
-    background: string;
-    text: string;
-    primary: string;
-    card: string;
-    border: string;
-    sidebar: string;
-    appBar: string;
-    button: string;
-    buttonText: string;
-    editButton: string;
-    deleteButton: string;
-    viewButton: string;
-    createButton: string;
-  };
-  isDark: boolean;
-};
+type Theme = typeof lightTheme;
 
 type ThemeContextType = {
   theme: Theme;
@@ -53,39 +37,70 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isDark, setIsDark] = useState(Appearance.getColorScheme() === "dark");
-  const [useSystemTheme, setUseSystemTheme] = useState(true);
+  const [isDark, setIsDark] = useState<boolean>(false); // Default to false (light)
+  const [useSystemTheme, setUseSystemTheme] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false); // Track initialization
 
+  // Load saved theme preferences on mount
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        const savedTheme = await AsyncStorage.getItem("theme");
         const savedSystemTheme = await AsyncStorage.getItem("useSystemTheme");
-        if (savedTheme !== null) {
-          setIsDark(savedTheme === "dark");
-        }
+        const savedTheme = await AsyncStorage.getItem("theme");
+
         if (savedSystemTheme !== null) {
-          setUseSystemTheme(savedSystemTheme === "true");
+          const useSystem = savedSystemTheme === "true";
+          setUseSystemTheme(useSystem);
+
+          if (!useSystem && savedTheme !== null) {
+            // If not using system theme, load saved theme
+            setIsDark(savedTheme === "dark");
+          } else {
+            // Use system theme if no manual theme is set
+            setIsDark(Appearance.getColorScheme() === "dark");
+          }
+        } else {
+          // Default to system theme if no preference is saved
+          setIsDark(Appearance.getColorScheme() === "dark");
         }
       } catch (error) {
         console.error("Error loading theme:", error);
+        Alert.alert(
+          "Theme Error",
+          "Failed to load theme preferences. Using default theme.",
+          [{ text: "OK" }],
+          { cancelable: true }
+        );
+      } finally {
+        setIsInitialized(true); // Mark initialization complete
       }
     };
     loadTheme();
   }, []);
 
+  // Save theme preferences when they change
   useEffect(() => {
+    if (!isInitialized) return; // Skip saving until initialized
     const saveTheme = async () => {
       try {
-        await AsyncStorage.setItem("theme", isDark ? "dark" : "light");
-        await AsyncStorage.setItem("useSystemTheme", useSystemTheme.toString());
+        await AsyncStorage.multiSet([
+          ["theme", isDark ? "dark" : "light"],
+          ["useSystemTheme", useSystemTheme.toString()],
+        ]);
       } catch (error) {
         console.error("Error saving theme:", error);
+        Alert.alert(
+          "Theme Error",
+          "Failed to save theme preferences. Your settings may not persist.",
+          [{ text: "OK" }],
+          { cancelable: true }
+        );
       }
     };
     saveTheme();
-  }, [isDark, useSystemTheme]);
+  }, [isDark, useSystemTheme, isInitialized]);
 
+  // Listen for system theme changes when useSystemTheme is true
   useEffect(() => {
     if (useSystemTheme) {
       const subscription = Appearance.addChangeListener(({ colorScheme }) => {
@@ -95,11 +110,9 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [useSystemTheme]);
 
-  const theme = isDark ? darkTheme : lightTheme;
-
   const toggleTheme = () => {
     setIsDark((prev) => !prev);
-    setUseSystemTheme(false); // Override system theme on manual toggle
+    setUseSystemTheme(false); // Disable system theme on manual toggle
   };
 
   const toggleSystemTheme = () => {
@@ -112,10 +125,17 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const theme = useMemo(() => (isDark ? darkTheme : lightTheme), [isDark]);
+
   const value = useMemo(
     () => ({ theme, toggleTheme, isDark, useSystemTheme, toggleSystemTheme }),
-    [isDark, theme, useSystemTheme]
+    [theme, isDark, useSystemTheme]
   );
+
+  // Render nothing until initialized to prevent flickering
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
