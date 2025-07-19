@@ -1,8 +1,16 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
 import { useTheme } from "@/app/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const substitutions = [
   {
@@ -27,10 +35,50 @@ const substitutions = [
 
 export default function SubstitutionsPage() {
   const { theme } = useTheme();
+  const router = useRouter();
 
   return (
     <Container>
       <BackHeader title="Substitutions" />
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={[
+            styles.searchContainer,
+            {
+              backgroundColor: theme.colors.card,
+              borderColor: theme.colors.border,
+            },
+          ]}
+          onPress={() => router.push("/(driver)/screens/searchSubstitution")}
+        >
+          <Ionicons
+            name="search"
+            size={18}
+            color={theme.colors.text}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[styles.searchPlaceholder, { color: theme.colors.text }]}
+          >
+            Rechercher un véhicule...
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.addButton,
+            { backgroundColor: theme.colors.createButton },
+          ]}
+          onPress={() => router.push("/(driver)/screens/searchSubstitution")}
+        >
+          <Ionicons name="add" size={20} color={theme.colors.buttonText} />
+          <Text
+            style={[styles.addButtonText, { color: theme.colors.buttonText }]}
+          >
+            Ajouter
+          </Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={substitutions}
         keyExtractor={(item) => item.id}
@@ -70,5 +118,35 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 14,
     marginTop: 6,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 40,
+    marginRight: 10,
+    borderWidth: 1,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 20,
+    width: "100%",
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    height: 40,
+    borderRadius: 10,
+  },
+  addButtonText: {
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  searchPlaceholder: {
+    fontSize: 14,
   },
 });

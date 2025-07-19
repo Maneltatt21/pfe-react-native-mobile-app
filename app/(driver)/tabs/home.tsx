@@ -1,12 +1,14 @@
 import { useAuth } from "@/app/components/authProvider";
 import ConfirmModal from "@/app/components/confirm-model";
-import { useTheme } from "@/app/theme/ThemeProvider"; // make sure path is correct
+import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  Animated,
+  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -15,11 +17,28 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { FlatListProps } from "react-native/Libraries/Lists/FlatList";
 
 type DrawerParamList = {
   Home: undefined;
 };
+interface ImageItem {
+  id: string;
+  uri: string;
+}
 
+const images: ImageItem[] = [
+  { id: "1", uri: "https://picsum.photos/300/200?random=1" },
+  { id: "2", uri: "https://picsum.photos/300/200?random=2" },
+  { id: "3", uri: "https://picsum.photos/300/200?random=3" },
+  { id: "4", uri: "https://picsum.photos/300/200?random=4" },
+];
+// Create AnimatedFlatList to support native onScroll animations
+const AnimatedFlatList = Animated.createAnimatedComponent(
+  FlatList
+) as any as React.ComponentType<
+  Animated.AnimatedProps<FlatListProps<ImageItem>>
+>;
 export default function Home() {
   const router = useRouter();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
@@ -28,6 +47,8 @@ export default function Home() {
 
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
 
@@ -42,6 +63,17 @@ export default function Home() {
       console.error("Logout failed:", err);
     }
   };
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+    {
+      useNativeDriver: true,
+      listener: (event: any) => {
+        const index = Math.round(event.nativeEvent.contentOffset.x / 320); // 300px width + 20px margin
+        setCurrentIndex(index);
+      },
+    }
+  );
 
   return (
     <Pressable
@@ -102,6 +134,45 @@ export default function Home() {
           </Pressable>
         )}
 
+        <View style={styles.carouselContainer}>
+          <AnimatedFlatList
+            data={images as ImageItem[]}
+            keyExtractor={(item: ImageItem, index: number) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={320}
+            snapToAlignment="center"
+            decelerationRate="fast"
+            renderItem={({ item }: { item: ImageItem }) => (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: item.uri }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          />
+          <View style={styles.dotsContainer}>
+            {images.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor:
+                      index === currentIndex
+                        ? theme.colors.primary
+                        : theme.colors.border,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
         <ConfirmModal
           visible={showLogoutModal}
           title="Logout"
@@ -131,7 +202,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarContainer: {
-    width: 150,
+    width: 180,
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
@@ -157,7 +228,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
     right: 16,
-    width: 150,
+    width: 180,
     borderRadius: 16,
     elevation: 4,
     padding: 8,
@@ -172,5 +243,35 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: "600",
     fontSize: 16,
+  },
+  carouselContainer: {
+    marginTop: 20,
+    marginHorizontal: 16,
+  },
+  imageContainer: {
+    width: 300,
+    height: 200,
+    marginRight: 20,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  dotsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
 });

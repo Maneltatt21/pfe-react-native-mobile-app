@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   avatarContainer: {
-    width: 150,
+    width: 180,
     flexDirection: "row",
     alignItems: "center",
     padding: 8,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
     right: 16,
-    width: 150,
+    width: 180,
     borderRadius: 16,
     elevation: 4,
     padding: 8,
