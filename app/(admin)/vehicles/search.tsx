@@ -1,4 +1,5 @@
-import { useTheme } from "@/app/theme/ThemeProvider"; // ⬅️ import theme hook
+import { useCarsStore } from "@/app/store/carsStore";
+import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -11,27 +12,25 @@ import {
   View,
 } from "react-native";
 
-const carData = [
-  { id: "1", type: "Frigo", model: "A1" },
-  { id: "2", type: "Fourgon", model: "B2" },
-  { id: "3", type: "Froid", model: "C3" },
-  { id: "4", type: "Fract", model: "D4" },
-  { id: "5", type: "Camion", model: "E5" },
-];
-
 export default function VehicleSearchScreen() {
-  const { theme } = useTheme(); // ⬅️ get current theme
+  const { theme } = useTheme();
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  const filteredCars = carData.filter((car) =>
-    car.type.toLowerCase().startsWith(search.toLowerCase())
+  const { cars } = useCarsStore();
+
+  // 🔍 Filter logic - checks both brand and model
+  const filteredCars = cars.filter((car) =>
+    `${car.registration_number} ${car.model}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
 
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
+      {/* 🔙 Header with search */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -39,6 +38,7 @@ export default function VehicleSearchScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
+
         <TextInput
           style={[
             styles.input,
@@ -47,20 +47,31 @@ export default function VehicleSearchScreen() {
               color: theme.colors.text,
             },
           ]}
-          placeholder="Rechercher un type..."
+          placeholder="Rechercher un véhicule..."
           placeholderTextColor={theme.colors.text + "99"}
           value={search}
           onChangeText={setSearch}
         />
       </View>
 
+      {/* 🚘 Result List */}
       <FlatList
         data={filteredCars}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.result}>
+          <TouchableOpacity
+            style={[styles.result, { borderBottomColor: theme.colors.border }]}
+            onPress={() =>
+              router.push({
+                pathname: "/vehicles/[id]",
+                params: {
+                  id: item.id,
+                },
+              })
+            }
+          >
             <Text style={[styles.resultText, { color: theme.colors.text }]}>
-              {item.type} - {item.model}
+              {item.registration_number} - {item.model}
             </Text>
           </TouchableOpacity>
         )}
@@ -103,6 +114,7 @@ const styles = StyleSheet.create({
   noResult: {
     textAlign: "center",
     marginTop: 20,
+    fontSize: 16,
   },
   backButton: {
     width: 30,

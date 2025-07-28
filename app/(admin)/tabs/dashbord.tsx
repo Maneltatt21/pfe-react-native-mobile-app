@@ -1,11 +1,12 @@
 import { useAuth } from "@/app/components/authProvider";
 import ConfirmModal from "@/app/components/confirm-model";
+import { useCarsStore } from "@/app/store/carsStore";
 import { useTheme } from "@/app/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -23,6 +24,7 @@ type DrawerParamList = {
 export default function AdminDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { fetchCars, cars } = useCarsStore();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -32,6 +34,9 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
+  useEffect(() => {
+    fetchCars();
+  }, [fetchCars]);
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
@@ -42,12 +47,6 @@ export default function AdminDashboard() {
       console.error("Logout failed:", err);
     }
   };
-
-  const vehicles = Array.from({ length: 15 }, (_, i) => ({
-    id: `${100 + i}`,
-    type: "Frigo",
-    model: `Model-${i + 1}`,
-  }));
 
   return (
     <Pressable
@@ -191,61 +190,88 @@ export default function AdminDashboard() {
               </Text>
             </View>
 
-            {vehicles.map((vehicle, index) => (
-              <TouchableOpacity
-                key={vehicle.id}
+            {Array.isArray(cars) && cars.length > 0 ? (
+              cars.map((vehicle, index) => (
+                <TouchableOpacity
+                  key={vehicle.id}
+                  style={[
+                    styles.tableRow,
+                    {
+                      backgroundColor: theme.colors.card,
+                      borderBottomColor: theme.colors.border,
+                    },
+                  ]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/vehicles/[id]",
+                      params: {
+                        id: vehicle.id,
+                        type: vehicle.year,
+                        model: vehicle.model,
+                      },
+                    })
+                  }
+                >
+                  <Text
+                    style={[styles.tableCell, { color: theme.colors.text }]}
+                  >
+                    {vehicle.id}
+                  </Text>
+                  <Text
+                    style={[styles.tableCell, { color: theme.colors.text }]}
+                  >
+                    {vehicle.registration_number}
+                  </Text>
+                  <Text
+                    style={[styles.tableCell, { color: theme.colors.text }]}
+                  >
+                    {vehicle.year}
+                  </Text>
+                  <Text
+                    style={[styles.tableCell, { color: theme.colors.text }]}
+                  >
+                    {vehicle.model}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{ color: theme.colors.text, padding: 16 }}>
+                No vehicles found.
+              </Text>
+            )}
+            <TouchableOpacity
+              onPress={() => router.push("/(admin)/vehicles/add-vehicle")}
+            >
+              <View
                 style={[
-                  styles.tableRow,
+                  styles.tableRowAdd,
                   {
-                    backgroundColor: theme.colors.card,
-                    borderBottomColor: theme.colors.border,
+                    backgroundColor: theme.colors.createButton,
                   },
                 ]}
-                onPress={() =>
-                  router.push({
-                    pathname: "/vehicles/[id]",
-                    params: {
-                      id: vehicle.id,
-                      type: vehicle.type,
-                      model: vehicle.model,
-                    },
-                  })
-                }
               >
-                <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                  {index + 1}
+                <Text
+                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
+                >
+                  +
                 </Text>
-                <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                  {vehicle.id}
+                <Text
+                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
+                >
+                  ---
                 </Text>
-                <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                  {vehicle.type}
+                <Text
+                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
+                >
+                  Ajouter
                 </Text>
-                <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                  {vehicle.model}
+                <Text
+                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
+                >
+                  un véhicule
                 </Text>
-              </TouchableOpacity>
-            ))}
-
-            <View
-              style={[
-                styles.tableRowAdd,
-                { backgroundColor: theme.colors.createButton },
-              ]}
-            >
-              <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                +
-              </Text>
-              <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                ---
-              </Text>
-              <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                Ajouter
-              </Text>
-              <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                un véhicule
-              </Text>
-            </View>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
         <ConfirmModal

@@ -51,7 +51,6 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
-
   const handleLogout = () => setShowLogoutModal(true);
 
   const confirmLogout = async () => {

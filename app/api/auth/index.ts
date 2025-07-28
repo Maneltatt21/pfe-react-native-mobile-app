@@ -19,7 +19,6 @@ export const login = async (
   password: string
 ): Promise<AuthResponse> => {
   const response = await axiosInstance.post("/login", { email, password });
-  console.log("login :", response);
   return response.data;
 };
 
@@ -31,8 +30,6 @@ export const register = async (userData: {
   role: string;
 }): Promise<AuthResponse> => {
   const response = await axiosInstance.post("/register", userData);
-  console.log("register :", response);
-
   return response.data;
 };
 
