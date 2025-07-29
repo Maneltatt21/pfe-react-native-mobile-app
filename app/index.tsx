@@ -277,7 +277,7 @@ export default function Login() {
                 },
               ]}
               onPress={() => {
-                setEmail("driver@example.com");
+                setEmail("chauffeur@example.com");
                 setPassword("password");
               }}
               disabled={loading || authLoading}

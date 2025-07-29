@@ -1,10 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Constants from "expo-constants";
 
 // Base URL for your Laravel API
-const ip = "10.0.2.2";
-const realip = "192.168.209.74";
-const BASE_URL = `http://${ip}:8000/api/v1`;
+
+const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
 
 // Create axios instance
 const axiosInstance = axios.create({
