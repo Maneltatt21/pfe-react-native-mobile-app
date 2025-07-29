@@ -12,7 +12,6 @@ const controlesTechniques = [
 
 export default function ControleTechniquePage() {
   const { theme } = useTheme();
-
   return (
     <Container>
       <BackHeader title="Contrôle Technique" />
@@ -36,7 +35,7 @@ export default function ControleTechniquePage() {
                   : { color: theme.colors.deleteButton },
               ]}
             >
-              Status: {item.status}
+              Status:{item.status}
             </Text>
           </View>
         )}

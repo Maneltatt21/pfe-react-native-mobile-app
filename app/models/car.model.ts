@@ -32,7 +32,7 @@ export interface Vehicle {
   registration_number: string;
   model: string;
   year: number;
-  status: "active" | "inactive";
+  status: "active" | "archived";
   archived_at: string | null;
   created_at: string;
   updated_at: string;

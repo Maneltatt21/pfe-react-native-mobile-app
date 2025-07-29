@@ -1,16 +1,19 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { Vehicle } from "@/app/models/car.model";
+import { CreateCar, Vehicle } from "@/app/models/car.model";
 import { useCarsStore } from "@/app/store/carsStore";
 import { useTheme } from "@/app/theme/ThemeProvider";
+import { Picker } from "@react-native-picker/picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Button,
+  Modal,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -21,12 +24,21 @@ export const unstable_settings = {
 export default function VehicleDetailPage() {
   const { id } = useLocalSearchParams();
   const { theme } = useTheme();
-  const { fetchCar, deleteCar } = useCarsStore();
+  const { fetchCar, deleteCar, editCar } = useCarsStore();
   const router = useRouter();
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [editVisible, setEditVisible] = useState(false);
+  const [editModel, setEditModel] = useState("");
+  const [editYear, setEditYear] = useState(new Date().getFullYear().toString());
+  const [editRegistration, setEditRegistration] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  const years = Array.from({ length: 20 }, (_, i) =>
+    (new Date().getFullYear() - i).toString()
+  );
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -45,15 +57,8 @@ export default function VehicleDetailPage() {
       "Confirmer la suppression",
       "Êtes-vous sûr de vouloir supprimer ce véhicule ?",
       [
-        {
-          text: "Annuler",
-          style: "cancel",
-        },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: handleDelete,
-        },
+        { text: "Non", style: "cancel" },
+        { text: "Oui", style: "destructive", onPress: handleDelete },
       ]
     );
   };
@@ -61,9 +66,9 @@ export default function VehicleDetailPage() {
   const handleDelete = async () => {
     if (!vehicle) return;
     try {
-      await deleteCar(vehicle.id.toString()).then(() => {
-        Alert.alert("Succès", "Véhicule supprimé avec succès.");
-      });
+      setDeleting(true);
+      await deleteCar(vehicle.id.toString());
+      Alert.alert("Succès", "Véhicule supprimé avec succès.");
       router.back();
     } catch (error) {
       console.error("Erreur de suppression :", error);
@@ -73,8 +78,42 @@ export default function VehicleDetailPage() {
     }
   };
 
-  const goToEdit = () => {
-    router.push(`/vehicles/${vehicle?.id}/edit`);
+  const openEditModal = () => {
+    if (!vehicle) return;
+    setEditModel(vehicle.model);
+    setEditYear(vehicle.year.toString());
+    setEditRegistration(vehicle.registration_number);
+    setEditVisible(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!vehicle) return;
+    setIsEditing(true);
+
+    const updatedCar: CreateCar = {
+      model: editModel,
+      year: parseInt(editYear, 10),
+      registration_number: editRegistration,
+    };
+
+    try {
+      await editCar(vehicle.id.toString(), updatedCar);
+      setVehicle((prev) =>
+        prev
+          ? {
+              ...prev,
+              model: editModel,
+              year: parseInt(editYear, 10),
+              registration_number: editRegistration,
+            }
+          : null
+      );
+      setEditVisible(false);
+    } catch (err) {
+      Alert.alert("Erreur", "La mise à jour du véhicule a échoué.");
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   if (loading) {
@@ -101,34 +140,23 @@ export default function VehicleDetailPage() {
 
       <View style={[styles.detailBox, { backgroundColor: theme.colors.card }]}>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          ID:{" "}
-          <Text style={[styles.value, { color: theme.colors.primary }]}>
-            {vehicle.id}
-          </Text>
+          ID: <Text style={styles.value}>{vehicle.id}</Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          Modèle:{" "}
-          <Text style={[styles.value, { color: theme.colors.primary }]}>
-            {vehicle.model}
-          </Text>
+          Modèle: <Text style={styles.value}>{vehicle.model}</Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          Année:{" "}
-          <Text style={[styles.value, { color: theme.colors.primary }]}>
-            {vehicle.year}
-          </Text>
+          Année: <Text style={styles.value}>{vehicle.year}</Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
           Statut:{" "}
-          <Text style={[styles.value, { color: theme.colors.primary }]}>
+          <Text style={styles.value}>
             {vehicle.status === "active" ? "Disponible" : "Indisponible"}
           </Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
           N° d&apos;immatriculation:{" "}
-          <Text style={[styles.value, { color: theme.colors.primary }]}>
-            {vehicle.registration_number}
-          </Text>
+          <Text style={styles.value}>{vehicle.registration_number}</Text>
         </Text>
 
         {vehicle.assigned_user ? (
@@ -144,21 +172,15 @@ export default function VehicleDetailPage() {
             </Text>
             <Text style={[styles.label, { color: theme.colors.text }]}>
               Nom:{" "}
-              <Text style={[styles.value, { color: theme.colors.primary }]}>
-                {vehicle.assigned_user.name}
-              </Text>
+              <Text style={styles.value}>{vehicle.assigned_user.name}</Text>
             </Text>
             <Text style={[styles.label, { color: theme.colors.text }]}>
               Email:{" "}
-              <Text style={[styles.value, { color: theme.colors.primary }]}>
-                {vehicle.assigned_user.email}
-              </Text>
+              <Text style={styles.value}>{vehicle.assigned_user.email}</Text>
             </Text>
             <Text style={[styles.label, { color: theme.colors.text }]}>
               Rôle:{" "}
-              <Text style={[styles.value, { color: theme.colors.primary }]}>
-                {vehicle.assigned_user.role}
-              </Text>
+              <Text style={styles.value}>{vehicle.assigned_user.role}</Text>
             </Text>
           </>
         ) : (
@@ -168,17 +190,74 @@ export default function VehicleDetailPage() {
             🚫 Ce véhicule n&apos;a pas de chauffeur assigné.
           </Text>
         )}
+
+        <View style={styles.actionButtons}>
+          <Button title="Modifier" onPress={openEditModal} />
+          <Button
+            title={deleting ? "Archivage..." : "Archiver"}
+            onPress={confirmDelete}
+            color="red"
+            disabled={deleting}
+          />
+        </View>
       </View>
 
-      <View style={styles.actionButtons}>
-        <Button title="Mettre à jour" onPress={goToEdit} />
-        <Button
-          title={deleting ? "Suppression..." : "Supprimer"}
-          onPress={confirmDelete}
-          color="red"
-          disabled={deleting}
-        />
-      </View>
+      {/* Modal d'édition */}
+      <Modal visible={editVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View
+            style={[styles.modalBox, { backgroundColor: theme.colors.card }]}
+          >
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              Modifier Véhicule
+            </Text>
+
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              value={editModel}
+              onChangeText={setEditModel}
+              placeholder="Modèle"
+              placeholderTextColor="#aaa"
+            />
+
+            <Text style={{ color: theme.colors.text, marginBottom: 6 }}>
+              Année
+            </Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={editYear}
+                onValueChange={(itemValue) => setEditYear(itemValue)}
+                style={{ color: theme.colors.text }}
+              >
+                {years.map((year) => (
+                  <Picker.Item key={year} label={year} value={year} />
+                ))}
+              </Picker>
+            </View>
+
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              value={editRegistration}
+              onChangeText={setEditRegistration}
+              placeholder="N° d'immatriculation"
+              placeholderTextColor="#aaa"
+            />
+
+            <View style={styles.modalActions}>
+              <Button title="Annuler" onPress={() => setEditVisible(false)} />
+              {isEditing ? (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.primary}
+                  style={{ marginLeft: 10 }}
+                />
+              ) : (
+                <Button title="Enregistrer" onPress={handleSaveEdit} />
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Container>
   );
 }
@@ -196,6 +275,7 @@ const styles = StyleSheet.create({
   },
   value: {
     fontWeight: "bold",
+    color: "#1e88e5",
   },
   separator: {
     borderBottomWidth: 1,
@@ -211,5 +291,38 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalBox: {
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 12,
+    paddingVertical: 6,
+    fontSize: 16,
+  },
+  pickerContainer: {
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 12,
+  },
+  modalActions: {
+    marginTop: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 });

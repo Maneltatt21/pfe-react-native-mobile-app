@@ -6,6 +6,9 @@ import { CreateCar, Vehicle, VehiclesResponse } from "../models/car.model";
 
 interface CarsState {
   cars: Vehicle[];
+  nbCars: number;
+  nbCarsAssigne: number;
+  nbCarsDisponible: number;
   isLoading: boolean;
   setCars: (cars: Vehicle[]) => void;
   setLoading: (loading: boolean) => void;
@@ -13,12 +16,16 @@ interface CarsState {
   createCar: (car: CreateCar) => Promise<void>;
   fetchCar: (carId: string) => Promise<Vehicle | undefined>;
   deleteCar: (carId: string) => Promise<void>;
+  editCar: (carId: string, car: CreateCar) => Promise<void>;
 }
 
 export const useCarsStore = create<CarsState>()(
   persist(
     (set, get) => ({
       cars: [],
+      nbCars: 0,
+      nbCarsAssigne: 0,
+      nbCarsDisponible: 0,
       isLoading: false,
 
       setCars: (cars) => set({ cars }),
@@ -28,7 +35,22 @@ export const useCarsStore = create<CarsState>()(
         set({ isLoading: true });
         try {
           const res = await axiosInstance.get<VehiclesResponse>("/vehicles");
-          set({ cars: res.data.data });
+          const cars = res.data.data;
+          const filteredCars = cars.filter((car) => car.status !== "archived");
+          const nbCars = cars.length;
+          const nbCarsAssigne = cars.filter(
+            (car) => car.assigned_user !== null
+          ).length;
+          const nbCarsDisponible = cars.filter(
+            (car) => car.assigned_user === null
+          ).length;
+
+          set({
+            cars: filteredCars,
+            nbCars,
+            nbCarsAssigne,
+            nbCarsDisponible,
+          });
         } catch (err) {
           console.error("fetchCars failed:", err);
         } finally {
@@ -64,10 +86,20 @@ export const useCarsStore = create<CarsState>()(
       deleteCar: async (carId: string) => {
         set({ isLoading: true });
         try {
-          const { data } = await axiosInstance.delete<{ vehicle: Vehicle }>(
+          await axiosInstance.delete<{ vehicle: Vehicle }>(
             `/vehicles/${carId}`
           );
-          console.log("delete response :", data);
+          await get().fetchCars();
+        } catch (err) {
+          console.error("fetchCar failed:", err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+      editCar: async (carId: string, car: CreateCar) => {
+        set({ isLoading: true });
+        try {
+          await axiosInstance.put(`/vehicles/${carId}`, car);
           await get().fetchCars();
         } catch (err) {
           console.error("fetchCar failed:", err);

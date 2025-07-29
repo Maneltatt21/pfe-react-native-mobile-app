@@ -1,74 +1,156 @@
+// ExchangesScreen.tsx
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
+import { Exchange } from "@/app/models/exchange.model";
+import { useExchangesStore } from "@/app/store/exchangesStore";
 import { useTheme } from "@/app/theme/ThemeProvider";
-import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 
-const substitutions = [
-  {
-    id: "1",
-    originalVehicle: "Renault Clio",
-    substituteVehicle: "Peugeot 208",
-    date: "2024-04-10",
-  },
-  {
-    id: "2",
-    originalVehicle: "Toyota Corolla",
-    substituteVehicle: "Hyundai Elantra",
-    date: "2024-03-05",
-  },
-  {
-    id: "3",
-    originalVehicle: "Ford Focus",
-    substituteVehicle: "Volkswagen Golf",
-    date: "2024-01-20",
-  },
-];
-
-export default function SubstitutionsPage() {
+const ExchangesScreen = () => {
   const { theme } = useTheme();
+  const { exchanges, isLoading, fetchExchanges } = useExchangesStore();
+
+  useEffect(() => {
+    fetchExchanges();
+  }, [fetchExchanges]);
+
+  if (isLoading) {
+    return (
+      <Container>
+        <BackHeader title="Exchange Requests" />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </Container>
+    );
+  }
 
   return (
     <Container>
-      <BackHeader title="Substitutions" />
-      <FlatList
-        data={substitutions}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
-            <Text style={[styles.original, { color: theme.colors.text }]}>
-              Original Vehicle: {item.originalVehicle}
+      <BackHeader title="Exchange Requests" />
+      {exchanges.length === 0 ? (
+        <Text style={[styles.noData, { color: theme.colors.text }]}>
+          No exchanges available.
+        </Text>
+      ) : (
+        exchanges.map((exchange: Exchange) => (
+          <View
+            key={exchange.id}
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+              Exchange #{exchange.id}
             </Text>
-            <Text style={[styles.substitute, { color: theme.colors.text }]}>
-              Substitute Vehicle: {item.substituteVehicle}
+            <Text style={{ color: theme.colors.text }}>
+              <Text style={styles.label}>Status:</Text> {exchange.status}
             </Text>
-            <Text style={[styles.date, { color: theme.colors.text }]}>
-              Date: {item.date}
+            <Text style={{ color: theme.colors.text }}>
+              <Text style={styles.label}>Note:</Text> {exchange.note}
             </Text>
+            <Text style={{ color: theme.colors.text }}>
+              <Text style={styles.label}>Request Date:</Text>
+              {new Date(exchange.request_date).toLocaleString()}
+            </Text>
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                Vehicle
+              </Text>
+              <Text style={{ color: theme.colors.text }}>
+                {exchange.vehicle.model} ({exchange.vehicle.registration_number}
+                ) - {exchange.vehicle.year}
+              </Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                From Driver
+              </Text>
+              <Text style={{ color: theme.colors.text }}>
+                {exchange.from_driver.name} ({exchange.from_driver.email})
+              </Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                To Driver
+              </Text>
+              <Text style={{ color: theme.colors.text }}>
+                {exchange.to_driver.name} ({exchange.to_driver.email})
+              </Text>
+            </View>
+
+            {exchange.before_photo_path && (
+              <View style={styles.section}>
+                <Text
+                  style={[styles.sectionTitle, { color: theme.colors.text }]}
+                >
+                  Before Photo
+                </Text>
+                <Image
+                  source={{
+                    uri: `http://127.0.0.1:8000/public/storage/${exchange.before_photo_path}`,
+                  }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
           </View>
-        )}
-        contentContainerStyle={{ paddingTop: 10 }}
-      />
+        ))
+      )}
     </Container>
   );
-}
+};
+
+export default ExchangesScreen;
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noData: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 32,
+  },
   card: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
   },
-  original: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 18,
     fontWeight: "600",
+    marginBottom: 8,
   },
-  substitute: {
-    fontSize: 16,
-    marginTop: 4,
+  label: {
+    fontWeight: "bold",
   },
-  date: {
-    fontSize: 14,
-    marginTop: 6,
+  section: {
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  image: {
+    marginTop: 8,
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
   },
 });

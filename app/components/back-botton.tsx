@@ -18,7 +18,7 @@ export default function BackHeader({ title }: BackHeaderProps) {
         <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
       </TouchableOpacity>
       <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
-      <View style={styles.backButton} /> {/* spacer to balance */}
+      <View style={styles.backButton} />
     </View>
   );
 }

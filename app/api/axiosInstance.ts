@@ -3,6 +3,7 @@ import axios from "axios";
 
 // Base URL for your Laravel API
 const ip = "10.0.2.2";
+const realip = "192.168.209.74";
 const BASE_URL = `http://${ip}:8000/api/v1`;
 
 // Create axios instance
@@ -19,18 +20,20 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem("authToken");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const stored = await AsyncStorage.getItem("auth-storage");
+      if (stored) {
+        const { state } = JSON.parse(stored);
+        const token = state?.token;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     } catch (error) {
       console.error("Error getting auth token:", error);
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor to handle errors

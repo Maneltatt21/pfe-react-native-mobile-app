@@ -24,7 +24,8 @@ type DrawerParamList = {
 export default function AdminDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { fetchCars, cars } = useCarsStore();
+  const { fetchCars, cars, nbCars, nbCarsAssigne, nbCarsDisponible } =
+    useCarsStore();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -94,7 +95,7 @@ export default function AdminDashboard() {
                 Véhicules Totaux
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-                345
+                {nbCars}
               </Text>
             </View>
             <View
@@ -104,7 +105,7 @@ export default function AdminDashboard() {
                 Véhicules Assigné
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-                300
+                {nbCarsAssigne}
               </Text>
             </View>
             <View
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
                 Véhicules Disponible
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-                45
+                {nbCarsDisponible}
               </Text>
             </View>
           </View>

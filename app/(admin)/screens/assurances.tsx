@@ -17,31 +17,31 @@ export default function VehicleDetailPage() {
       <BackHeader title="Frigo" />
       <View style={[styles.detailBox, { backgroundColor: theme.colors.card }]}>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          ID:{" "}
+          ID :
           <Text style={[styles.value, { color: theme.colors.primary }]}>
             {id}
           </Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          Type:{" "}
+          Type :
           <Text style={[styles.value, { color: theme.colors.primary }]}>
             Frigo
           </Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          Modèle:{" "}
+          Modèle :
           <Text style={[styles.value, { color: theme.colors.primary }]}>
             Earum
           </Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          Statut:{" "}
+          Statut :
           <Text style={[styles.value, { color: theme.colors.primary }]}>
             Disponible
           </Text>
         </Text>
         <Text style={[styles.label, { color: theme.colors.text }]}>
-          N°:{" "}
+          N° :
           <Text style={[styles.value, { color: theme.colors.primary }]}>
             456
           </Text>
