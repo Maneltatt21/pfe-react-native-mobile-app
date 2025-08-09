@@ -1,11 +1,11 @@
+import { login, register } from "@/src/api/auth";
+import useAuthStore from "@/src/store/authStore";
+import { User } from "@/src/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { createContext, useContext, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { login, register } from "../api/auth";
-import useAuthStore from "../store/authStore";
-import { User } from "../types"; // Changed from "../types" to "../types/user"
 
 interface AuthContextType {
   user: User | null;
@@ -130,3 +130,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthProvider;

@@ -1,7 +1,9 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { useDriversStore } from "@/app/store/deriversStore";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { Driver } from "@/src/models/driver.model";
+import { useDriversStore } from "@/src/store/deriversStore";
+import { useTheme } from "@/src/theme/ThemeProvider";
+
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -12,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Driver } from "../../models/driver.model";
 
 export default function ChauffeursPage() {
   const { theme } = useTheme();

@@ -1,8 +1,9 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { Exchange } from "@/app/models/exchange.model";
-import { useExchangesStore } from "@/app/store/exchangesStore";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { Exchange } from "@/src/models/exchange.model";
+import { useExchangesStore } from "@/src/store/exchangesStore";
+import { useTheme } from "@/src/theme/ThemeProvider";
+
 import Constants from "expo-constants";
 import React, { useEffect } from "react";
 import {

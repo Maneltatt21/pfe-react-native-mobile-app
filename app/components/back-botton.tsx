@@ -1,4 +1,4 @@
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";

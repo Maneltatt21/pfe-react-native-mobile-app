@@ -1,6 +1,6 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 

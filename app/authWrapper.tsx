@@ -1,8 +1,8 @@
+import { ROUTES } from "@/src/config/routes";
 import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "./components/authProvider";
-import { ROUTES } from "./config/routes";
 
 interface AuthWrapperProps {
   children: React.ReactNode;

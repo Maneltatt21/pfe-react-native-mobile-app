@@ -1,8 +1,8 @@
 // components/ConfirmModal.tsx
+import { useTheme } from "@/src/theme/ThemeProvider";
 import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../theme/ThemeProvider";
 
 interface ConfirmModalProps {
   visible: boolean;

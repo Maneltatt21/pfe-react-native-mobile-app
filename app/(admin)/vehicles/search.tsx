@@ -1,5 +1,5 @@
-import { useCarsStore } from "@/app/store/carsStore";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useCarsStore } from "@/src/store/carsStore";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -19,7 +19,6 @@ export default function VehicleSearchScreen() {
 
   const { cars } = useCarsStore();
 
-  // 🔍 Filter logic - checks both brand and model
   const filteredCars = cars.filter((car) =>
     `${car.registration_number} ${car.model}`
       .toLowerCase()
@@ -30,7 +29,6 @@ export default function VehicleSearchScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      {/* 🔙 Header with search */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}

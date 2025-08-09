@@ -1,12 +1,9 @@
 // app/(admin)/vehicles/add-vehicle.tsx
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { CreateCar } from "@/app/models/car.model";
-import { useCarsStore } from "@/app/store/carsStore";
-import { useTheme } from "@/app/theme/ThemeProvider";
-// Add this import at the top
-// Add this import at the top
-// Add this import at the top
+import { CreateCar } from "@/src/models/car.model";
+import { useCarsStore } from "@/src/store/carsStore";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { Picker } from "@react-native-picker/picker";
 
 import { router } from "expo-router";

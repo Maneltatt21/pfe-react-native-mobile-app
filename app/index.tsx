@@ -1,4 +1,5 @@
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { ROUTES } from "@/src/config/routes";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -14,7 +15,6 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "./components/authProvider";
-import { ROUTES } from "./config/routes";
 
 export default function Login() {
   const router = useRouter();

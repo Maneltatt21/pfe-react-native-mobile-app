@@ -1,6 +1,6 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import React from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 

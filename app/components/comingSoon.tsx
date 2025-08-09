@@ -1,4 +1,4 @@
-import { useTheme } from "@/app/theme/ThemeProvider"; // <-- import useTheme
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface ComingSoonProps {

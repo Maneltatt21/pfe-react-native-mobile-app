@@ -1,4 +1,4 @@
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import React from "react";
 import { StyleSheet, Switch, Text, View } from "react-native";
 

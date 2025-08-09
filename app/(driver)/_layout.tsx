@@ -1,4 +1,4 @@
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { DrawerItem } from "@react-navigation/drawer";
 import { useRouter } from "expo-router";

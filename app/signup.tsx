@@ -1,5 +1,5 @@
-import { ROUTES } from "@/app/config/routes";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { ROUTES } from "@/src/config/routes";
+import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";

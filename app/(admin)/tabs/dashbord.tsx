@@ -1,7 +1,8 @@
 import { useAuth } from "@/app/components/authProvider";
 import ConfirmModal from "@/app/components/confirm-model";
-import { useCarsStore } from "@/app/store/carsStore";
-import { useTheme } from "@/app/theme/ThemeProvider";
+import { useCarsStore } from "@/src/store/carsStore";
+import { useTheme } from "@/src/theme/ThemeProvider";
+
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useNavigation } from "@react-navigation/native";
