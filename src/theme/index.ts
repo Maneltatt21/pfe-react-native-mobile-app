@@ -13,6 +13,8 @@ export const lightTheme = {
     deleteButton: "#F44336", // Red for delete
     viewButton: "#FF9800", // Orange for view
     createButton: "#465abe", // Matches primary for create
+    error: "#F44336",
+    success: "#81C784",
   },
   isDark: false,
 };
@@ -32,6 +34,8 @@ export const darkTheme = {
     deleteButton: "#EF5350", // Lighter red for delete
     viewButton: "#FFB300", // Lighter orange for view
     createButton: "#465abe", // Matches primary for create
+    error: "#F44336",
+    success: "#81C784",
   },
   isDark: true,
 };

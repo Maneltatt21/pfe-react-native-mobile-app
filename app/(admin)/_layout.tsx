@@ -51,7 +51,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         )}
         onPress={() => router.push("../screens/chauffeurs")}
       />
-      <DrawerItem
+      {/* <DrawerItem
         label={() => (
           <Text style={[styles.label, { color: theme.colors.text }]}>
             Assurances
@@ -74,7 +74,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           </Text>
         )}
         onPress={() => router.push("../screens/cart-grise")}
-      />
+      /> */}
       <DrawerItem
         label={() => (
           <Text style={[styles.label, { color: theme.colors.text }]}>

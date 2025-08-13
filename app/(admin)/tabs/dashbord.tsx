@@ -204,7 +204,7 @@ export default function AdminDashboard() {
                     },
                   ]}
                   onPress={() =>
-                    router.push({
+                    router.navigate({
                       pathname: "/vehicles/[id]",
                       params: {
                         id: vehicle.id,

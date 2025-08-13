@@ -1,22 +1,24 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { CreateCar, Vehicle } from "@/src/models/car.model";
-import { useCarsStore } from "@/src/store/carsStore";
+import { CreateCar } from "@/src/models/car.model";
+import { useCarStore } from "@/src/store/carStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
-
 import { Picker } from "@react-native-picker/picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Button,
   Modal,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons"; // or Ionicons / Feather etc.
 
 export const unstable_settings = {
   drawer: null,
@@ -24,13 +26,12 @@ export const unstable_settings = {
 
 export default function VehicleDetailPage() {
   const { id } = useLocalSearchParams();
+
   const { theme } = useTheme();
-  const { fetchCar, deleteCar, editCar } = useCarsStore();
+  const { car, errors, isLoading, fetchCar, deleteCar, editCar, clearErrors } =
+    useCarStore();
   const router = useRouter();
 
-  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editModel, setEditModel] = useState("");
   const [editYear, setEditYear] = useState(new Date().getFullYear().toString());
@@ -42,15 +43,9 @@ export default function VehicleDetailPage() {
   );
 
   useEffect(() => {
-    const fetchVehicle = async () => {
-      if (typeof id === "string") {
-        setLoading(true);
-        const data = await fetchCar(id);
-        setVehicle(data ?? null);
-        setLoading(false);
-      }
-    };
-    fetchVehicle();
+    if (typeof id === "string") {
+      fetchCar(id);
+    }
   }, [fetchCar, id]);
 
   const confirmDelete = () => {
@@ -65,32 +60,25 @@ export default function VehicleDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!vehicle) return;
     try {
-      setDeleting(true);
-      await deleteCar(vehicle.id.toString());
+      await deleteCar(car.id.toString());
       Alert.alert("Succès", "Véhicule supprimé avec succès.");
       router.back();
     } catch (error) {
       console.error("Erreur de suppression :", error);
       Alert.alert("Erreur", "Impossible de supprimer le véhicule.");
-    } finally {
-      setDeleting(false);
     }
   };
 
   const openEditModal = () => {
-    if (!vehicle) return;
-    setEditModel(vehicle.model);
-    setEditYear(vehicle.year.toString());
-    setEditRegistration(vehicle.registration_number);
+    setEditModel(car.model);
+    setEditYear(car.year.toString());
+    setEditRegistration(car.registration_number);
     setEditVisible(true);
   };
 
   const handleSaveEdit = async () => {
-    if (!vehicle) return;
     setIsEditing(true);
-
     const updatedCar: CreateCar = {
       model: editModel,
       year: parseInt(editYear, 10),
@@ -98,17 +86,7 @@ export default function VehicleDetailPage() {
     };
 
     try {
-      await editCar(vehicle.id.toString(), updatedCar);
-      setVehicle((prev) =>
-        prev
-          ? {
-              ...prev,
-              model: editModel,
-              year: parseInt(editYear, 10),
-              registration_number: editRegistration,
-            }
-          : null
-      );
+      await editCar(car.id.toString(), updatedCar);
       setEditVisible(false);
     } catch (err) {
       Alert.alert("Erreur", "La mise à jour du véhicule a échoué.");
@@ -117,19 +95,23 @@ export default function VehicleDetailPage() {
     }
   };
 
-  if (loading) {
+  if (!id) {
+    // Defensive fallback in case id is missing
+    return <Text>Invalid vehicle ID</Text>;
+  }
+  if (isLoading) {
     return (
       <Container>
-        <BackHeader title="Frigo" />
+        <BackHeader title="" />
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </Container>
     );
   }
 
-  if (!vehicle) {
+  if (car.id === 0) {
     return (
       <Container>
-        <BackHeader title="Frigo" />
+        <BackHeader title="" />
         <Text style={{ color: theme.colors.text }}>Véhicule introuvable.</Text>
       </Container>
     );
@@ -137,128 +119,483 @@ export default function VehicleDetailPage() {
 
   return (
     <Container>
-      <BackHeader title="Détails Véhicule" />
-
-      <View style={[styles.detailBox, { backgroundColor: theme.colors.card }]}>
-        <Text style={[styles.label, { color: theme.colors.text }]}>
-          ID: <Text style={styles.value}>{vehicle.id}</Text>
-        </Text>
-        <Text style={[styles.label, { color: theme.colors.text }]}>
-          Modèle: <Text style={styles.value}>{vehicle.model}</Text>
-        </Text>
-        <Text style={[styles.label, { color: theme.colors.text }]}>
-          Année: <Text style={styles.value}>{vehicle.year}</Text>
-        </Text>
-        <Text style={[styles.label, { color: theme.colors.text }]}>
-          Statut:{" "}
-          <Text style={styles.value}>
-            {vehicle.status === "active" ? "Disponible" : "Indisponible"}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <BackHeader title={car.model} />
+        <View
+          style={[styles.detailBox, { backgroundColor: theme.colors.card }]}
+        >
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            ID: <Text style={styles.value}>{car.id}</Text>
           </Text>
-        </Text>
-        <Text style={[styles.label, { color: theme.colors.text }]}>
-          N° d&apos;immatriculation:{" "}
-          <Text style={styles.value}>{vehicle.registration_number}</Text>
-        </Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Modèle: <Text style={styles.value}>{car.model}</Text>
+          </Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Année: <Text style={styles.value}>{car.year}</Text>
+          </Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Statut:
+            <Text style={styles.value}>
+              {car.status === "active" ? "Disponible" : "Indisponible"}
+            </Text>
+          </Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            N° d&apos;immatriculation:
+            <Text style={styles.value}>{car.registration_number}</Text>
+          </Text>
 
-        {vehicle.assigned_user ? (
-          <>
-            <View
+          {car.assigned_user ? (
+            <>
+              <View
+                style={[
+                  styles.separator,
+                  { borderBottomColor: theme.colors.border },
+                ]}
+              />
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                Chauffeur Assigné
+              </Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Nom: <Text style={styles.value}>{car.assigned_user.name}</Text>
+              </Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Email:{" "}
+                <Text style={styles.value}>{car.assigned_user.email}</Text>
+              </Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Rôle: <Text style={styles.value}>{car.assigned_user.role}</Text>
+              </Text>
+            </>
+          ) : (
+            <Text
               style={[
-                styles.separator,
-                { borderBottomColor: theme.colors.border },
+                styles.label,
+                { marginTop: 16, color: theme.colors.text },
               ]}
-            />
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-              Chauffeur Assigné
+            >
+              🚫 Ce véhicule n&apos;a pas de chauffeur assigné.
             </Text>
-            <Text style={[styles.label, { color: theme.colors.text }]}>
-              Nom:{" "}
-              <Text style={styles.value}>{vehicle.assigned_user.name}</Text>
-            </Text>
-            <Text style={[styles.label, { color: theme.colors.text }]}>
-              Email:{" "}
-              <Text style={styles.value}>{vehicle.assigned_user.email}</Text>
-            </Text>
-            <Text style={[styles.label, { color: theme.colors.text }]}>
-              Rôle:{" "}
-              <Text style={styles.value}>{vehicle.assigned_user.role}</Text>
-            </Text>
-          </>
-        ) : (
-          <Text
-            style={[styles.label, { marginTop: 16, color: theme.colors.text }]}
-          >
-            🚫 Ce véhicule n&apos;a pas de chauffeur assigné.
-          </Text>
-        )}
+          )}
 
-        <View style={styles.actionButtons}>
-          <Button title="Modifier" onPress={openEditModal} />
-          <Button
-            title={deleting ? "Archivage..." : "Archiver"}
-            onPress={confirmDelete}
-            color="red"
-            disabled={deleting}
-          />
-        </View>
-      </View>
-
-      {/* Modal d'édition */}
-      <Modal visible={editVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View
-            style={[styles.modalBox, { backgroundColor: theme.colors.card }]}
-          >
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              Modifier Véhicule
-            </Text>
-
-            <TextInput
-              style={[styles.input, { color: theme.colors.text }]}
-              value={editModel}
-              onChangeText={setEditModel}
-              placeholder="Modèle"
-              placeholderTextColor="#aaa"
-            />
-
-            <Text style={{ color: theme.colors.text, marginBottom: 6 }}>
-              Année
-            </Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={editYear}
-                onValueChange={(itemValue) => setEditYear(itemValue)}
-                style={{ color: theme.colors.text }}
-              >
-                {years.map((year) => (
-                  <Picker.Item key={year} label={year} value={year} />
-                ))}
-              </Picker>
-            </View>
-
-            <TextInput
-              style={[styles.input, { color: theme.colors.text }]}
-              value={editRegistration}
-              onChangeText={setEditRegistration}
-              placeholder="N° d'immatriculation"
-              placeholderTextColor="#aaa"
-            />
-
-            <View style={styles.modalActions}>
-              <Button title="Annuler" onPress={() => setEditVisible(false)} />
-              {isEditing ? (
-                <ActivityIndicator
-                  size="small"
-                  color={theme.colors.primary}
-                  style={{ marginLeft: 10 }}
-                />
-              ) : (
-                <Button title="Enregistrer" onPress={handleSaveEdit} />
-              )}
-            </View>
+          <View style={styles.actionButtons}>
+            <Button title="Modifier" onPress={openEditModal} />
+            <Button title="Archiver" onPress={confirmDelete} color="red" />
           </View>
         </View>
-      </Modal>
+
+        {/* my code start here */}
+        <Pressable
+          onPress={() =>
+            router.navigate({
+              pathname: "/vehicles/documents-vehicule",
+            })
+          }
+          style={({ pressed }) => [
+            styles.row,
+            { backgroundColor: theme.colors.card },
+            // pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.label}>Documents</Text>
+          <Icon name="chevron-right" size={24} color="#666" />
+        </Pressable>
+        <Pressable
+          onPress={() =>
+            router.navigate({
+              pathname: "/vehicles/maintenances-vehicule",
+            })
+          }
+          style={({ pressed }) => [
+            styles.row,
+            { backgroundColor: theme.colors.card },
+            // pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.label}>Maintenances</Text>
+          <Icon name="chevron-right" size={24} color="#666" />
+        </Pressable>
+        <Pressable
+          onPress={() =>
+            router.navigate({
+              pathname: "/vehicles/echanges-vehicule",
+            })
+          }
+          style={({ pressed }) => [
+            styles.row,
+            { backgroundColor: theme.colors.card },
+            // pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.label}>Echanges</Text>
+          <Icon name="chevron-right" size={24} color="#666" />
+        </Pressable>
+        {/* my code ends here */}
+        {/* Documents Table */}
+        {/* <View
+          style={[
+            styles.tableContainer,
+            { backgroundColor: theme.colors.card },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Documents
+          </Text>
+          {car.documents?.length === 0 || !car.documents ? (
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Aucun document disponible.
+            </Text>
+          ) : (
+            <>
+              <View style={styles.tableHeader}>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  Type
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1.5 },
+                  ]}
+                >
+                  Expiration
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 2 },
+                  ]}
+                >
+                  Fichier
+                </Text>
+              </View>
+              {car.documents.map((doc) => (
+                <View key={doc.id} style={styles.tableRow}>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {doc.type}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1.5 },
+                    ]}
+                  >
+                    {new Date(doc.expiration_date).toLocaleDateString()}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 2 },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {doc.file_path?.split("/").pop() ?? "No file"}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+        <View
+          style={[
+            styles.tableContainer,
+            { backgroundColor: theme.colors.card },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Maintenances
+          </Text>
+          {car.maintenances?.length === 0 || !car.maintenances ? (
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Aucun entretien disponible.
+            </Text>
+          ) : (
+            <>
+              <View style={styles.tableHeader}>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  Type
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1.5 },
+                  ]}
+                >
+                  Description
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  Date
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  Rappel
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1.5 },
+                  ]}
+                >
+                  Facture
+                </Text>
+              </View>
+              {car.maintenances.map((m) => (
+                <View key={m.id} style={styles.tableRow}>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {m.maintenance_type}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1.5 },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {m.description}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {new Date(m.date).toLocaleDateString()}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {new Date(m.reminder_date).toLocaleDateString()}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1.5 },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {m.invoice_path.split("/").pop()}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+        <View
+          style={[
+            styles.tableContainer,
+            { backgroundColor: theme.colors.card },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Échanges
+          </Text>
+          {car.exchanges?.length === 0 || !car.exchanges ? (
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Aucun échange disponible.
+            </Text>
+          ) : (
+            <>
+              <View style={styles.tableHeader}>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  De
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  À
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1.5 },
+                  ]}
+                >
+                  Date
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 1 },
+                  ]}
+                >
+                  Statut
+                </Text>
+                <Text
+                  style={[
+                    styles.tableHeaderText,
+                    { color: theme.colors.text, flex: 2 },
+                  ]}
+                >
+                  Note
+                </Text>
+              </View>
+              {car.exchanges.map((e) => (
+                <View key={e.id} style={styles.tableRow}>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {e.from_driver_id}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {e.to_driver_id}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1.5 },
+                    ]}
+                  >
+                    {new Date(e.request_date).toLocaleDateString()}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 1 },
+                    ]}
+                  >
+                    {e.status}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.text, flex: 2 },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {e.note}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View> */}
+        {errors.length > 0 && (
+          <View
+            style={[
+              styles.tableContainer,
+              { backgroundColor: theme.colors.card },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Erreurs
+            </Text>
+            {errors.map((error, index) => (
+              <Text
+                key={index}
+                style={[styles.label, { color: theme.colors.error || "red" }]}
+              >
+                [{new Date(error.timestamp).toLocaleString()}] {error.operation}
+                :{error.message}
+              </Text>
+            ))}
+            <Button title="Effacer les erreurs" onPress={clearErrors} />
+          </View>
+        )}
+        <Modal visible={editVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View
+              style={[styles.modalBox, { backgroundColor: theme.colors.card }]}
+            >
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Modifier Véhicule
+              </Text>
+
+              <TextInput
+                style={[styles.input, { color: theme.colors.text }]}
+                value={editModel}
+                onChangeText={setEditModel}
+                placeholder="Modèle"
+                placeholderTextColor="#aaa"
+              />
+
+              <Text style={{ color: theme.colors.text, marginBottom: 6 }}>
+                Année
+              </Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={editYear}
+                  onValueChange={(itemValue) => setEditYear(itemValue)}
+                  style={{ color: theme.colors.text }}
+                >
+                  {years.map((year) => (
+                    <Picker.Item key={year} label={year} value={year} />
+                  ))}
+                </Picker>
+              </View>
+
+              <TextInput
+                style={[styles.input, { color: theme.colors.text }]}
+                value={editRegistration}
+                onChangeText={setEditRegistration}
+                placeholder="N° d'immatriculation"
+                placeholderTextColor="#aaa"
+              />
+
+              <View style={styles.modalActions}>
+                <Button title="Annuler" onPress={() => setEditVisible(false)} />
+                {isEditing ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primary}
+                    style={{ marginLeft: 10 }}
+                  />
+                ) : (
+                  <Button title="Enregistrer" onPress={handleSaveEdit} />
+                )}
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
     </Container>
   );
 }
@@ -273,6 +610,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 10,
+    color: "#f2f2f2",
   },
   value: {
     fontWeight: "bold",
@@ -325,5 +663,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  tableContainer: {
+    padding: 16,
+    borderRadius: 12,
+    elevation: 2,
+    marginTop: 20,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  tableHeaderText: {
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "left",
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  tableCell: {
+    fontSize: 14,
+    textAlign: "left",
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 20, // Ensure content doesn't get cut off at the bottom
+  },
+  row: {
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  pressed: {
+    backgroundColor: "#f2f2f2",
   },
 });
