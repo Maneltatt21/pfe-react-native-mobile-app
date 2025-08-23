@@ -10,53 +10,64 @@ export const unstable_settings = {
 
 export default function VehicleDocumentsPage() {
   const { theme } = useTheme();
-  const { car, errors, isLoading, fetchCar, deleteCar, editCar, clearErrors } =
-    useCarStore();
+  const { car } = useCarStore();
 
   return (
     <Container>
       <BackHeader title="Documents" />
-      {/* Documents Table */}
-      <View
-        style={[styles.tableContainer, { backgroundColor: theme.colors.card }]}
-      >
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Documents
-        </Text>
-        {car.documents?.length === 0 || !car.documents ? (
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Aucun document disponible.
-          </Text>
-        ) : (
-          <>
-            <View style={styles.tableHeader}>
-              <Text
+
+      <View style={styles.content}>
+        <View style={styles.table}>
+          {/* Header */}
+          <View
+            style={[
+              styles.tableRowHeader,
+              { backgroundColor: theme.colors.card },
+            ]}
+          >
+            <Text
+              style={[
+                styles.tableCellHeader,
+                { color: theme.colors.text, flex: 1 },
+              ]}
+            >
+              Type
+            </Text>
+            <Text
+              style={[
+                styles.tableCellHeader,
+                { color: theme.colors.text, flex: 1.5 },
+              ]}
+            >
+              Expiration
+            </Text>
+            <Text
+              style={[
+                styles.tableCellHeader,
+                { color: theme.colors.text, flex: 2 },
+              ]}
+            >
+              Fichier
+            </Text>
+          </View>
+
+          {/* Rows */}
+          {car.documents?.length === 0 || !car.documents ? (
+            <Text style={{ color: theme.colors.text, padding: 16 }}>
+              Aucun document disponible.
+            </Text>
+          ) : (
+            car.documents.map((doc) => (
+              <View
+                key={doc.id}
                 style={[
-                  styles.tableHeaderText,
-                  { color: theme.colors.text, flex: 1 },
+                  styles.tableRow,
+                  {
+                    backgroundColor: theme.colors.card,
+                    borderBottomColor: theme.colors.border,
+                  },
                 ]}
               >
-                Type
-              </Text>
-              <Text
-                style={[
-                  styles.tableHeaderText,
-                  { color: theme.colors.text, flex: 1.5 },
-                ]}
-              >
-                Expiration
-              </Text>
-              <Text
-                style={[
-                  styles.tableHeaderText,
-                  { color: theme.colors.text, flex: 2 },
-                ]}
-              >
-                Fichier
-              </Text>
-            </View>
-            {car.documents.map((doc) => (
-              <View key={doc.id} style={styles.tableRow}>
                 <Text
                   style={[
                     styles.tableCell,
@@ -83,58 +94,46 @@ export default function VehicleDocumentsPage() {
                   {doc.file_path?.split("/").pop() ?? "No file"}
                 </Text>
               </View>
-            ))}
-          </>
-        )}
+            ))
+          )}
+        </View>
       </View>
     </Container>
   );
 }
 
 const styles = StyleSheet.create({
-  detailBox: {
-    padding: 16,
+  content: {},
+  table: {
     borderRadius: 12,
-    elevation: 2,
-    marginTop: 20,
+    overflow: "hidden",
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  value: {
-    fontWeight: "bold",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
-  tableContainer: {
-    padding: 16,
-    borderRadius: 12,
-    elevation: 2,
-    marginTop: 20,
-  },
-  tableHeader: {
+  tableRowHeader: {
     flexDirection: "row",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
-  tableHeaderText: {
+  tableCellHeader: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "600",
-    textAlign: "left",
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   tableCell: {
+    flex: 1,
     fontSize: 14,
-    textAlign: "left",
+  },
+  tableRowAdd: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 10,
   },
 });

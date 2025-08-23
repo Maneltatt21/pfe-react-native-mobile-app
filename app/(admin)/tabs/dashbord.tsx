@@ -86,7 +86,6 @@ export default function AdminDashboard() {
             </View>
           </TouchableOpacity>
         </View>
-
         <View style={styles.content}>
           <View style={styles.statsRow}>
             <View

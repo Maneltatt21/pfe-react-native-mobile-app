@@ -162,7 +162,7 @@ export default function VehicleDetailPage() {
                 Nom: <Text style={styles.value}>{car.assigned_user.name}</Text>
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Email:{" "}
+                Email:
                 <Text style={styles.value}>{car.assigned_user.email}</Text>
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
@@ -199,7 +199,9 @@ export default function VehicleDetailPage() {
             // pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.label}>Documents</Text>
+          <Text style={(styles.label, { color: theme.colors.text })}>
+            Documents
+          </Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
         <Pressable
@@ -214,7 +216,9 @@ export default function VehicleDetailPage() {
             // pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.label}>Maintenances</Text>
+          <Text style={(styles.label, { color: theme.colors.text })}>
+            Maintenances
+          </Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
         <Pressable
@@ -229,7 +233,9 @@ export default function VehicleDetailPage() {
             // pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.label}>Echanges</Text>
+          <Text style={(styles.label, { color: theme.colors.text })}>
+            Echanges
+          </Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
         {/* my code ends here */}
@@ -610,7 +616,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 10,
-    color: "#f2f2f2",
   },
   value: {
     fontWeight: "bold",
