@@ -3,7 +3,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import axiosInstance from "../api/axiosInstance";
 import {
   CreateCar,
-  CreateCarDocument,
   CreateCarMaintenance,
   defaultVehicle,
   ErrorEntry,
@@ -22,12 +21,9 @@ interface CarState {
   fetchCar: (carId: string) => Promise<Vehicle | undefined>;
   editCar: (carId: string, car: CreateCar) => Promise<void>;
   deleteCar: (carId: string) => Promise<void>;
-  createCarDocument: (
-    carId: string,
-    document: CreateCarDocument
-  ) => Promise<void>;
+  createCarDocument: (carId: number, document: FormData) => Promise<void>;
   createCarMaintenance: (
-    carId: string,
+    carId: number,
     maintenance: CreateCarMaintenance
   ) => Promise<void>;
 }
@@ -124,14 +120,15 @@ export const useCarStore = create<CarState>()(
         }
       },
 
-      createCarDocument: async (carId: string, document: CreateCarDocument) => {
+      createCarDocument: async (carId: number, document: FormData) => {
         set({ isLoading: true });
         try {
           const { data } = await axiosInstance.post<{ vehicle: Vehicle }>(
-            `/vehicles/${carId}/documents`,
+            `/vehicles/1/documents`,
             document
           );
-          set({ car: data.vehicle });
+          console.log(data);
+          // set({ car: data.vehicle });
         } catch (err) {
           const errorMessage =
             err instanceof Error ? err.message : "Unknown error";
@@ -153,7 +150,7 @@ export const useCarStore = create<CarState>()(
       },
 
       createCarMaintenance: async (
-        carId: string,
+        carId: number,
         maintenance: CreateCarMaintenance
       ) => {
         set({ isLoading: true });

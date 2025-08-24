@@ -1,7 +1,8 @@
 import { ROUTES } from "@/src/config/routes";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import Constants from "expo-constants";
+import { Link, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -306,6 +307,12 @@ export default function Login() {
               Sign up
             </Text>
           </Text>
+          <Link
+            style={[styles.signupLink, { color: theme.colors.primary }]}
+            href={`http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/documentation`}
+          >
+            Backend link
+          </Link>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

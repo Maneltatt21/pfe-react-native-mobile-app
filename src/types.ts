@@ -88,7 +88,7 @@ export interface CreateCar {
 export interface CreateCarDocument {
   type: string;
   expiration_date: string;
-  file_path: string;
+  file: File;
 }
 
 // CreateCarMaintenance interface
