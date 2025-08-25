@@ -85,7 +85,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         password_confirmation,
         role,
       });
-      setAuth(user, token);
       return true;
     } catch (error) {
       console.error("Registration failed:", error);

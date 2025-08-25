@@ -1,8 +1,7 @@
 import { ROUTES } from "@/src/config/routes";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
-import Constants from "expo-constants";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -297,7 +296,7 @@ export default function Login() {
           </View>
         </View>
 
-        <View style={styles.footer}>
+        {/* <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.colors.text }]}>
             Don&apos;t have an account?{" "}
             <Text
@@ -313,7 +312,7 @@ export default function Login() {
           >
             Backend link
           </Link>
-        </View>
+        </View> */}
       </ScrollView>
     </KeyboardAvoidingView>
   );

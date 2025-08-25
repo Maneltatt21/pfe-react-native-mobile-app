@@ -1,5 +1,5 @@
 // store/driversStore.ts
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import axiosInstance from "../api/axiosInstance";
@@ -9,13 +9,16 @@ interface DriversState {
   drivers: Driver[];
   isLoading: boolean;
   fetchDrivers: () => Promise<void>;
+  createDriver: () => Promise<void>;
+  deleteDriver: (driverId: number) => Promise<void>;
+  updateDriver: (driverId: number, data: Partial<Driver>) => Promise<void>;
   setDrivers: (drivers: Driver[]) => void;
   setLoading: (loading: boolean) => void;
 }
 
 export const useDriversStore = create<DriversState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       drivers: [],
       isLoading: false,
 
@@ -26,7 +29,6 @@ export const useDriversStore = create<DriversState>()(
         set({ isLoading: true });
         try {
           const res = await axiosInstance.get<DriversResponse>("/users");
-          // Filter out admins here:
           const filteredDrivers = res.data.data.filter(
             (driver) => driver.role !== "admin"
           );
@@ -37,13 +39,44 @@ export const useDriversStore = create<DriversState>()(
           set({ isLoading: false });
         }
       },
+      createDriver: async () => {
+        set({ isLoading: true });
+        try {
+          // await axiosInstance.delete(`/users/${driverId}`);
+          await get().fetchDrivers();
+        } catch (err) {
+          console.error("deleteDriver failed:", err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+      deleteDriver: async (driverId: number) => {
+        set({ isLoading: true });
+        try {
+          await axiosInstance.delete(`/users/${driverId}`);
+          await get().fetchDrivers();
+        } catch (err) {
+          console.error("deleteDriver failed:", err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      updateDriver: async (driverId: number, data: Partial<Driver>) => {
+        set({ isLoading: true });
+        try {
+          await axiosInstance.put(`/users/${driverId}`, data);
+          await get().fetchDrivers(); // Refresh the list after update
+        } catch (err) {
+          console.error("updateDriver failed:", err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
     }),
     {
       name: "drivers-storage",
-      storage: createJSONStorage(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        () => require("@react-native-async-storage/async-storage").default
-      ),
+      storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );

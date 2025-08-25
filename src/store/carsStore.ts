@@ -36,7 +36,9 @@ export const useCarsStore = create<CarsState>()(
         try {
           const res = await axiosInstance.get<VehiclesResponse>("/vehicles");
           const cars = res.data.data;
-          const filteredCars = cars.filter((car) => car.status !== "archived");
+          const filteredCars = res.data.data.filter(
+            (car) => car.status !== "archived"
+          );
           const nbCars = cars.length;
           const nbCarsAssigne = cars.filter(
             (car) => car.assigned_user !== null

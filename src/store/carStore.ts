@@ -18,7 +18,7 @@ interface CarState {
   setLoading: (isLoading: boolean) => void;
   addError: (error: ErrorEntry) => void;
   clearErrors: () => void;
-  fetchCar: (carId: string) => Promise<Vehicle | undefined>;
+  fetchCar: (carId: number) => Promise<Vehicle | undefined>;
   editCar: (carId: string, car: CreateCar) => Promise<void>;
   deleteCar: (carId: string) => Promise<void>;
   createCarDocument: (carId: number, document: FormData) => Promise<void>;
@@ -41,7 +41,7 @@ export const useCarStore = create<CarState>()(
         set((state) => ({ errors: [...state.errors, error] })),
       clearErrors: () => set({ errors: [] }),
 
-      fetchCar: async (carId: string) => {
+      fetchCar: async (carId: number) => {
         set({ isLoading: true });
         try {
           const { data } = await axiosInstance.get<{ vehicle: Vehicle }>(
@@ -123,12 +123,13 @@ export const useCarStore = create<CarState>()(
       createCarDocument: async (carId: number, document: FormData) => {
         set({ isLoading: true });
         try {
-          const { data } = await axiosInstance.post<{ vehicle: Vehicle }>(
-            `/vehicles/1/documents`,
-            document
+          await axiosInstance.post(`/vehicles/${carId}/documents`, document);
+
+          // now refresh the full vehicle
+          const { data } = await axiosInstance.get<{ vehicle: Vehicle }>(
+            `/vehicles/${carId}`
           );
-          console.log(data);
-          // set({ car: data.vehicle });
+          set({ car: data.vehicle });
         } catch (err) {
           const errorMessage =
             err instanceof Error ? err.message : "Unknown error";
@@ -143,7 +144,7 @@ export const useCarStore = create<CarState>()(
             ],
           }));
           console.error("createCarDocument failed:", err);
-          throw err; // For UI error handling
+          throw err;
         } finally {
           set({ isLoading: false });
         }

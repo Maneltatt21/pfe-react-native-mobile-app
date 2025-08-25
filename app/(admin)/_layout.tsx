@@ -41,7 +41,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             Dashboard
           </Text>
         )}
-        onPress={() => router.push("../tabs/dashbord")}
+        onPress={() => router.replace("../tabs/dashbord")}
       />
       <DrawerItem
         label={() => (
@@ -49,39 +49,16 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             Chauffeurs
           </Text>
         )}
-        onPress={() => router.push("../screens/chauffeurs")}
+        onPress={() => router.replace("../drivers/chauffeurs")}
       />
-      {/* <DrawerItem
-        label={() => (
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Assurances
-          </Text>
-        )}
-        onPress={() => router.push("../screens/assurances")}
-      />
-      <DrawerItem
-        label={() => (
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Contrôle Techniques
-          </Text>
-        )}
-        onPress={() => router.push("../screens/controle-techniques")}
-      />
-      <DrawerItem
-        label={() => (
-          <Text style={[styles.label, { color: theme.colors.text }]}>
-            Carte Grise
-          </Text>
-        )}
-        onPress={() => router.push("../screens/cart-grise")}
-      /> */}
+
       <DrawerItem
         label={() => (
           <Text style={[styles.label, { color: theme.colors.text }]}>
             Substitutions
           </Text>
         )}
-        onPress={() => router.push("../screens/substitutions")}
+        onPress={() => router.replace("../screens/substitutions")}
       />
     </View>
   );

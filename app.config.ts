@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: "MyApp",
+    name: "AGS-Parc",
     slug: "my-app",
     extra: {
       API_URL: process.env.API_URL || "https://default-api.com",

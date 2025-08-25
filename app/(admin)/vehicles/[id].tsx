@@ -221,7 +221,7 @@ export default function VehicleDetailPage() {
           </Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
-        <Pressable
+        {/* <Pressable
           onPress={() =>
             router.navigate({
               pathname: "/vehicles/echanges-vehicule",
@@ -237,7 +237,7 @@ export default function VehicleDetailPage() {
             Echanges
           </Text>
           <Icon name="chevron-right" size={24} color="#666" />
-        </Pressable>
+        </Pressable> */}
 
         {errors.length > 0 && (
           <View
