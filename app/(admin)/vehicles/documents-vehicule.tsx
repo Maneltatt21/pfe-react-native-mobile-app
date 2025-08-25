@@ -16,7 +16,6 @@ import {
   Button,
   Linking,
   Modal,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -24,7 +23,6 @@ import {
 } from "react-native";
 
 export const unstable_settings = { drawer: null };
-const STORAGE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/storage`;
 
 export default function VehicleDocumentsPage() {
   const { theme } = useTheme();
@@ -32,6 +30,7 @@ export default function VehicleDocumentsPage() {
 
   /* --- local state ------------------------------------------------------- */
   const [isModalVisible, setModalVisible] = useState(false);
+  // const [isLoding, setIsLoding] = useState(false);
   const [type, setType] = useState("carte_grise");
   const [expirationDate, setExpirationDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -41,27 +40,6 @@ export default function VehicleDocumentsPage() {
 
   /* --- pick file ---------------------------------------------------------- */
 
-  // const pickDocument = async () => {
-  //   try {
-  //     const result = await DocumentPicker.getDocumentAsync({
-  //       type: ["application/pdf", "image/jpeg", "image/png"],
-  //     });
-
-  //     if (!result.canceled && result.assets && result.assets.length > 0) {
-  //       const file = result.assets[0]; // <-- file details here
-  //       console.log("File URI:", file.uri);
-  //       console.log("File Name:", file.name);
-  //       console.log("File Type:", file.mimeType);
-  //       console.log("File Size:", file.size);
-
-  //       return file; // return file to use later
-  //     } else {
-  //       console.log("User canceled file picker");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error picking document:", error);
-  //   }
-  // };
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -83,11 +61,7 @@ export default function VehicleDocumentsPage() {
       console.log("No file or expiration date");
       return;
     }
-
-    const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
-    const STORAGE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/storage`;
-
-    const uploadUrl = `${BASE_URL}/vehicles/${car.id}/documents`;
+    const uploadUrl = `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${car.id}/documents`;
     // Get the stored auth data
     const authStorage = await AsyncStorage.getItem("auth-storage");
     if (!authStorage) {
@@ -101,6 +75,7 @@ export default function VehicleDocumentsPage() {
       console.log("No token found in auth storage");
       return;
     }
+    // setIsLoding(true);
     try {
       const formData = new FormData();
       formData.append("type", type);
@@ -111,33 +86,30 @@ export default function VehicleDocumentsPage() {
           mime.lookup(file.name) || file.mimeType || "application/octet-stream",
         name: file.name,
       } as any);
-
-      // const token =
-      //   "Bearer 101|LodlbXhku0iUlX7GV97OY3qGMms14UcmImqcc2QW8846e256"; // replace with dynamic auth
-
       const res = await axios.post(uploadUrl, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-
+      // setIsLoding(false);
       console.log("Upload success:", res.data);
 
       // reset UI
-      setModalVisible(false);
       setFile(null);
       setExpirationDate("");
     } catch (err) {
       console.error("Upload error:", err);
+    } finally {
+      // setModalVisible(false);
     }
   };
 
   /* --- date picker -------------------------------------------------------- */
   const handleDateChange = (_: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === "android");
     if (selectedDate)
       setExpirationDate(selectedDate.toISOString().split("T")[0]);
+    setShowDatePicker(false);
   };
 
   /* ----------------------------------------------------------------------- */
@@ -177,8 +149,10 @@ export default function VehicleDocumentsPage() {
                 ]}
                 onPress={() => {
                   if (doc.file_path) {
-                    Linking.openURL(`${STORAGE_URL}/${doc.file_path}`).catch(
-                      (err) => console.error("Failed to open file:", err)
+                    Linking.openURL(
+                      `${Constants.expoConfig?.extra?.APP_STORAGE_URL}/${doc.file_path}`
+                    ).catch((err) =>
+                      console.error("Failed to open file:", err)
                     );
                   }
                 }}
@@ -256,7 +230,7 @@ export default function VehicleDocumentsPage() {
               />
             )}
 
-            <TouchableOpacity style={styles.pickFileBtn} onPress={pickDocument}>
+            {/* <TouchableOpacity style={styles.pickFileBtn} onPress={pickDocument}>
               <Text style={{ color: "#fff", fontWeight: "600" }}>
                 {file ? "Changer le fichier" : "Sélectionner un fichier"}
               </Text>
@@ -267,11 +241,28 @@ export default function VehicleDocumentsPage() {
               >
                 {file.name}
               </Text>
-            )}
-
+            )} */}
+            {/* File picker disguised as a TextField */}
+            <TouchableOpacity onPress={pickDocument} style={styles.fakeInput}>
+              <Text
+                style={[
+                  styles.fakeInputText,
+                  {
+                    color: file ? theme.colors.text : theme.colors.background,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {file ? file.name : "Sélectionner un fichier…"}
+              </Text>
+            </TouchableOpacity>
             <View style={styles.modalActions}>
               <Button title="Annuler" onPress={() => setModalVisible(false)} />
-              <Button title="Ajouter" onPress={handleAddDocument} />
+              <Button
+                // disabled={isLoding}
+                title="Ajouter"
+                onPress={handleAddDocument}
+              />
             </View>
           </View>
         </View>
@@ -282,31 +273,55 @@ export default function VehicleDocumentsPage() {
 
 const styles = StyleSheet.create({
   content: { flex: 1 },
-  table: { borderRadius: 12, overflow: "hidden", marginTop: 10 },
+  fakeInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 16,
+    justifyContent: "center",
+  },
+  fakeInputText: {
+    fontSize: 14,
+  },
+  table: {
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 10,
+    width: "100%",
+  },
   tableRowHeader: {
     flexDirection: "row",
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   tableCellHeader: {
     flex: 1,
     fontSize: 14,
     fontWeight: "600",
+    textAlign: "center",
   },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 12,
-    paddingHorizontal: 12,
     borderBottomWidth: 1,
   },
-  tableCell: { flex: 1, fontSize: 14 },
+  tableCell: {
+    flex: 1,
+    fontSize: 14,
+    textAlign: "center",
+  },
   tableRowAdd: {
     flexDirection: "row",
     justifyContent: "center",
     paddingVertical: 14,
-    borderRadius: 8,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
     marginTop: 10,
   },
+
+  // modal unchanged
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
