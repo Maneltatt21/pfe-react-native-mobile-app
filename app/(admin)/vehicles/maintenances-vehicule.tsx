@@ -36,7 +36,6 @@ export default function VehicleMaintenancesPage() {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [reminder, setReminder] = useState("");
-  const [maxDate, setMaxDate] = useState<Date | null>(null);
   const [minReminder, setMinReminder] = useState<Date | null>(null);
   const [invoice, setInvoice] =
     useState<DocumentPicker.DocumentPickerAsset | null>(null);
@@ -82,8 +81,10 @@ export default function VehicleMaintenancesPage() {
     } as any);
 
     setLoading(true);
+    console.log(form);
     try {
-      await axios.post(
+      // const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
+      const res = await axios.post(
         `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${car.id}/maintenances`,
         form,
         {
@@ -93,9 +94,9 @@ export default function VehicleMaintenancesPage() {
           },
         }
       );
+      console.log("resultat : ", res);
       await fetchCar(car.id);
       setVisible(false);
-      /* reset form */
       setDescription("");
       setDate("");
       setReminder("");

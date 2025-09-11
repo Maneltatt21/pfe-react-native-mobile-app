@@ -1,14 +1,14 @@
 import { useAuth } from "@/app/components/authProvider";
 import ConfirmModal from "@/app/components/confirm-model";
+import Container from "@/app/components/container";
+import { useDriverStore } from "@/src/store/driverStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Animated,
-  FlatList,
   Image,
   Pressable,
   ScrollView,
@@ -17,62 +17,37 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { FlatListProps } from "react-native/Libraries/Lists/FlatList";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 type DrawerParamList = {
   Home: undefined;
 };
-interface ImageItem {
-  id: string;
-  uri: string;
-}
 
-const images: ImageItem[] = [
-  { id: "1", uri: "https://picsum.photos/300/200?random=1" },
-  { id: "2", uri: "https://picsum.photos/300/200?random=2" },
-  { id: "3", uri: "https://picsum.photos/300/200?random=3" },
-  { id: "4", uri: "https://picsum.photos/300/200?random=4" },
-];
-// Create AnimatedFlatList to support native onScroll animations
-const AnimatedFlatList = Animated.createAnimatedComponent(
-  FlatList
-) as any as React.ComponentType<
-  Animated.AnimatedProps<FlatListProps<ImageItem>>
->;
 export default function Home() {
   const router = useRouter();
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const { theme } = useTheme();
   const { logout, user } = useAuth();
-
+  const { driver, fetchDriverProfile } = useDriverStore();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
   const handleLogout = () => setShowLogoutModal(true);
+
+  useEffect(() => {
+    fetchDriverProfile(user?.id!);
+  }, [fetchDriverProfile, user?.id]);
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
     try {
       await logout();
-      router.replace("/");
+      router.replace("/"); // redirect to login/root
     } catch (err) {
       console.error("Logout failed:", err);
     }
   };
-
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    {
-      useNativeDriver: true,
-      listener: (event: any) => {
-        const index = Math.round(event.nativeEvent.contentOffset.x / 320); // 300px width + 20px margin
-        setCurrentIndex(index);
-      },
-    }
-  );
 
   return (
     <Pressable
@@ -85,92 +60,177 @@ export default function Home() {
             <Ionicons name="menu" size={28} color={theme.colors.text} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.avatarContainer,
-              { backgroundColor: theme.colors.card },
-            ]}
-            onPress={toggleDropdown}
-          >
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-              style={styles.avatar}
-            />
-            <View style={styles.driverLabelContainer}>
-              <Text style={[styles.driverLabel, { color: theme.colors.text }]}>
-                {user?.name
-                  ? user.name.charAt(0).toUpperCase() + user.name.slice(1)
-                  : "Driver"}
-              </Text>
-              <Ionicons
-                name="chevron-down"
-                size={18}
-                color={theme.colors.text}
+          <View>
+            <TouchableOpacity
+              style={[
+                styles.avatarContainer,
+                { backgroundColor: theme.colors.card },
+              ]}
+              onPress={toggleDropdown}
+            >
+              <Image
+                source={{ uri: "https://i.pravatar.cc/150?img=12" }}
+                style={styles.avatar}
               />
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {dropdownVisible && (
-          <Pressable
-            style={[styles.dropdown, { backgroundColor: theme.colors.card }]}
-          >
-            <Pressable onPress={handleLogout} style={styles.dropdownItem}>
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color={theme.colors.deleteButton}
-              />
-              <Text
-                style={[
-                  styles.logoutText,
-                  { color: theme.colors.deleteButton },
-                ]}
-              >
-                Logout
-              </Text>
-            </Pressable>
-          </Pressable>
-        )}
-
-        <View style={styles.carouselContainer}>
-          <AnimatedFlatList
-            data={images as ImageItem[]}
-            keyExtractor={(item: ImageItem, index: number) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={320}
-            snapToAlignment="center"
-            decelerationRate="fast"
-            renderItem={({ item }: { item: ImageItem }) => (
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: item.uri }}
-                  style={styles.image}
-                  resizeMode="cover"
+              <View style={styles.driverLabelContainer}>
+                <Text
+                  style={[styles.driverLabel, { color: theme.colors.text }]}
+                >
+                  {user?.name
+                    ? user.name.charAt(0).toUpperCase() + user.name.slice(1)
+                    : "Driver"}
+                </Text>
+                <Ionicons
+                  name={dropdownVisible ? "chevron-up" : "chevron-down"}
+                  size={18}
+                  color={theme.colors.text}
                 />
               </View>
-            )}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          />
-          <View style={styles.dotsContainer}>
-            {images.map((_, index) => (
+            </TouchableOpacity>
+
+            {dropdownVisible && (
               <View
-                key={index}
                 style={[
-                  styles.dot,
-                  {
-                    backgroundColor:
-                      index === currentIndex
-                        ? theme.colors.primary
-                        : theme.colors.border,
-                  },
+                  styles.dropdown,
+                  { backgroundColor: theme.colors.card },
                 ]}
-              />
-            ))}
+              >
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={handleLogout}
+                >
+                  <Ionicons
+                    name="log-out-outline"
+                    size={20}
+                    color={theme.colors.error || "red"}
+                  />
+                  <Text
+                    style={[
+                      styles.logoutText,
+                      { color: theme.colors.error || "red" },
+                    ]}
+                  >
+                    Logout
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
+
+        <Container>
+          <View
+            style={[styles.detailBox, { backgroundColor: theme.colors.card }]}
+          >
+            {driver?.vehicle ? (
+              <>
+                {/* <Text style={[styles.label, { color: theme.colors.text }]}>
+                  ID: <Text style={styles.value}>{driver.vehicle.id}</Text>
+                </Text> */}
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Modèle:{" "}
+                  <Text style={styles.value}>{driver.vehicle.model}</Text>
+                </Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Année: <Text style={styles.value}>{driver.vehicle.year}</Text>
+                </Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Statut:
+                  <Text style={styles.value}>
+                    {driver.vehicle.status === "active"
+                      ? "Disponible"
+                      : "Indisponible"}
+                  </Text>
+                </Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  N° d&apos;immatriculation:
+                  <Text style={styles.value}>
+                    {driver.vehicle.registration_number}
+                  </Text>
+                </Text>
+              </>
+            ) : (
+              <Text
+                style={[
+                  styles.label,
+                  { marginTop: 16, color: theme.colors.error || "red" },
+                ]}
+              >
+                🚫 Aucun véhicule assigné pour vous.
+              </Text>
+            )}
+
+            {user && (
+              <>
+                <View
+                  style={[
+                    styles.separator,
+                    { borderBottomColor: theme.colors.border },
+                  ]}
+                />
+                <Text
+                  style={[styles.sectionTitle, { color: theme.colors.text }]}
+                >
+                  Chauffeur Assigné
+                </Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Nom: <Text style={styles.value}>{user.name}</Text>
+                </Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Email: <Text style={styles.value}>{user.email}</Text>
+                </Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Rôle: <Text style={styles.value}>{user.role}</Text>
+                </Text>
+              </>
+            )}
+          </View>
+
+          {/* Links */}
+          <Pressable
+            disabled={!driver?.vehicle}
+            onPress={() =>
+              driver?.vehicle &&
+              router.navigate({
+                pathname: "/(driver)/screens/driver-documents",
+              })
+            }
+            style={[
+              styles.row,
+              {
+                backgroundColor: theme.colors.card,
+                opacity: driver?.vehicle ? 1 : 0.5,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Documents
+            </Text>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </Pressable>
+
+          <Pressable
+            disabled={!driver?.vehicle}
+            onPress={() =>
+              driver?.vehicle &&
+              router.navigate({
+                pathname: "/(driver)/screens/driver-maintenaces",
+              })
+            }
+            style={[
+              styles.row,
+              {
+                backgroundColor: theme.colors.card,
+                opacity: driver?.vehicle ? 1 : 0.5,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Maintenances
+            </Text>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </Pressable>
+        </Container>
 
         <ConfirmModal
           visible={showLogoutModal}
@@ -187,13 +247,8 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 16,
-  },
-  scrollContainer: {
-    justifyContent: "flex-start",
-  },
+  container: { flex: 1, paddingTop: 16 },
+  scrollContainer: { justifyContent: "flex-start" },
   header: {
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -208,27 +263,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     elevation: 2,
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
+  avatar: { width: 36, height: 36, borderRadius: 18 },
   driverLabelContainer: {
     marginLeft: 8,
     flexDirection: "row",
     alignItems: "center",
   },
-  driverLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 4,
-  },
+  driverLabel: { fontSize: 16, fontWeight: "600", marginRight: 4 },
   dropdown: {
     position: "absolute",
-    top: 60,
-    right: 16,
+    top: 50,
+    right: 0,
     width: 180,
-    borderRadius: 16,
+    borderRadius: 12,
     elevation: 4,
     padding: 8,
     zIndex: 100,
@@ -238,39 +285,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
   },
-  logoutText: {
-    marginLeft: 8,
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  carouselContainer: {
-    marginTop: 20,
-    marginHorizontal: 16,
-  },
-  imageContainer: {
-    width: 300,
-    height: 200,
-    marginRight: 20,
-  },
-  image: {
-    width: "100%",
-    height: "100%",
+  logoutText: { marginLeft: 8, fontWeight: "600", fontSize: 16 },
+  detailBox: { padding: 16, borderRadius: 12, elevation: 2, marginTop: 20 },
+  label: { fontSize: 16, marginBottom: 10 },
+  value: { fontWeight: "bold", color: "#1e88e5" },
+  separator: { borderBottomWidth: 1, marginVertical: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 10 },
+  row: {
     borderRadius: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  dotsContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 10,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
 });

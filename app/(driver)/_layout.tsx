@@ -5,11 +5,12 @@ import { useRouter } from "expo-router";
 import Drawer from "expo-router/drawer";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import { useAuth } from "../components/authProvider";
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   const router = useRouter();
   const { theme } = useTheme();
-
+  const { user } = useAuth();
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.sidebar }]}>
       {/* Profile section */}
@@ -24,10 +25,10 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
           style={styles.profileImage}
         />
         <Text style={[styles.profileName, { color: theme.colors.text }]}>
-          John Doe
+          {user?.name}
         </Text>
         <Text style={[styles.profileEmail, { color: theme.colors.text }]}>
-          john.doe@example.com
+          {user?.email}
         </Text>
       </View>
 

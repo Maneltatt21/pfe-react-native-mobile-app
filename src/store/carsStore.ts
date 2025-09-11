@@ -27,7 +27,6 @@ export const useCarsStore = create<CarsState>()(
       nbCarsAssigne: 0,
       nbCarsDisponible: 0,
       isLoading: false,
-
       setCars: (cars) => set({ cars }),
       setLoading: (isLoading) => set({ isLoading }),
 
@@ -71,7 +70,6 @@ export const useCarsStore = create<CarsState>()(
           set({ isLoading: false });
         }
       },
-
       fetchCar: async (carId: string) => {
         set({ isLoading: true });
         try {

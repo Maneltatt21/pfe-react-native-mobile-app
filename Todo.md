@@ -4,9 +4,10 @@ Todos for react-native mobile app :
 
 
 admin :
+    delete car
 
 client :
     fetch car 
-    fetch exchnages 
-    make substitution
+    fetch / add exchnages 
+    
 

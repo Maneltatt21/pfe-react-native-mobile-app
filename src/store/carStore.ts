@@ -123,8 +123,11 @@ export const useCarStore = create<CarState>()(
       createCarDocument: async (carId: number, document: FormData) => {
         set({ isLoading: true });
         try {
-          await axiosInstance.post(`/vehicles/${carId}/documents`, document);
-
+          const res = await axiosInstance.post(
+            `/vehicles/${carId}/documents`,
+            document
+          );
+          console.log("res : ", res);
           // now refresh the full vehicle
           const { data } = await axiosInstance.get<{ vehicle: Vehicle }>(
             `/vehicles/${carId}`
@@ -160,6 +163,8 @@ export const useCarStore = create<CarState>()(
             `/vehicles/${carId}/maintenances`,
             maintenance
           );
+
+          console.log("result : ", data);
           set({ car: data.vehicle });
         } catch (err) {
           const errorMessage =

@@ -43,9 +43,7 @@ export default function VehicleDetailPage() {
   );
 
   useEffect(() => {
-    if (typeof id === "string") {
-      fetchCar(id);
-    }
+    fetchCar(Number(id));
   }, [fetchCar, id]);
 
   const confirmDelete = () => {
@@ -108,7 +106,7 @@ export default function VehicleDetailPage() {
     );
   }
 
-  if (car.id === 0) {
+  if ((car.id = 0)) {
     return (
       <Container>
         <BackHeader title="" />
@@ -221,24 +219,6 @@ export default function VehicleDetailPage() {
           </Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
-        {/* <Pressable
-          onPress={() =>
-            router.navigate({
-              pathname: "/vehicles/echanges-vehicule",
-            })
-          }
-          style={({ pressed }) => [
-            styles.row,
-            { backgroundColor: theme.colors.card },
-            // pressed && styles.pressed,
-          ]}
-        >
-          <Text style={(styles.label, { color: theme.colors.text })}>
-            Echanges
-          </Text>
-          <Icon name="chevron-right" size={24} color="#666" />
-        </Pressable> */}
-
         {errors.length > 0 && (
           <View
             style={[

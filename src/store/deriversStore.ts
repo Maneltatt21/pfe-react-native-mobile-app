@@ -8,12 +8,12 @@ import { Driver, DriversResponse } from "../models/driver.model";
 interface DriversState {
   drivers: Driver[];
   isLoading: boolean;
+  setDrivers: (drivers: Driver[]) => void;
+  setLoading: (loading: boolean) => void;
   fetchDrivers: () => Promise<void>;
   createDriver: () => Promise<void>;
   deleteDriver: (driverId: number) => Promise<void>;
   updateDriver: (driverId: number, data: Partial<Driver>) => Promise<void>;
-  setDrivers: (drivers: Driver[]) => void;
-  setLoading: (loading: boolean) => void;
 }
 
 export const useDriversStore = create<DriversState>()(
@@ -24,7 +24,6 @@ export const useDriversStore = create<DriversState>()(
 
       setDrivers: (drivers) => set({ drivers }),
       setLoading: (loading) => set({ isLoading: loading }),
-
       fetchDrivers: async () => {
         set({ isLoading: true });
         try {
@@ -61,7 +60,6 @@ export const useDriversStore = create<DriversState>()(
           set({ isLoading: false });
         }
       },
-
       updateDriver: async (driverId: number, data: Partial<Driver>) => {
         set({ isLoading: true });
         try {
