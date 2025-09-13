@@ -94,23 +94,6 @@ export default function DriverMaintenancesPage() {
                   >
                     {new Date(m.date).toLocaleDateString()}
                   </Text>
-                  {/* <Text
-                    style={[
-                      styles.tableCell,
-                      { color: "blue", textDecorationLine: "underline" },
-                    ]}
-                    onPress={() => {
-                      if (m.invoice_path) {
-                        Linking.openURL(
-                          `${Constants.expoConfig?.extra?.APP_STORAGE_URL}/${m.invoice_path}`
-                        ).catch((err) =>
-                          console.error("Failed to open file:", err)
-                        );
-                      }
-                    }}
-                  >
-                    {m.invoice_path ? "View File" : ""}
-                  </Text> */}
                 </View>
               ))
             )}

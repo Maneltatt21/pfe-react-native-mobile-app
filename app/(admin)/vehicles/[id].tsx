@@ -59,7 +59,7 @@ export default function VehicleDetailPage() {
 
   const handleDelete = async () => {
     try {
-      await deleteCar(car.id.toString());
+      await deleteCar(car!.id.toString());
       Alert.alert("Succès", "Véhicule supprimé avec succès.");
       router.back();
     } catch (error) {
@@ -69,9 +69,9 @@ export default function VehicleDetailPage() {
   };
 
   const openEditModal = () => {
-    setEditModel(car.model);
-    setEditYear(car.year.toString());
-    setEditRegistration(car.registration_number);
+    setEditModel(car!.model);
+    setEditYear(car!.year.toString());
+    setEditRegistration(car!.registration_number);
     setEditVisible(true);
   };
 
@@ -84,7 +84,7 @@ export default function VehicleDetailPage() {
     };
 
     try {
-      await editCar(car.id.toString(), updatedCar);
+      await editCar(id[0], updatedCar);
       setEditVisible(false);
     } catch (err) {
       Alert.alert("Erreur", "La mise à jour du véhicule a échoué.");
@@ -95,7 +95,7 @@ export default function VehicleDetailPage() {
 
   if (!id) {
     // Defensive fallback in case id is missing
-    return <Text>Invalid vehicle ID</Text>;
+    return <Text>ID du véhicule invalide</Text>;
   }
   if (isLoading) {
     return (
@@ -105,47 +105,37 @@ export default function VehicleDetailPage() {
       </Container>
     );
   }
-
-  if ((car.id = 0)) {
-    return (
-      <Container>
-        <BackHeader title="" />
-        <Text style={{ color: theme.colors.text }}>Véhicule introuvable.</Text>
-      </Container>
-    );
-  }
-
   return (
     <Container>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
       >
-        <BackHeader title={car.model} />
+        <BackHeader title={car!.model} />
         <View
           style={[styles.detailBox, { backgroundColor: theme.colors.card }]}
         >
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            ID: <Text style={styles.value}>{car.id}</Text>
+            ID : <Text style={styles.value}>{car!.id}</Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Modèle: <Text style={styles.value}>{car.model}</Text>
+            Modèle : <Text style={styles.value}>{car!.model}</Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Année: <Text style={styles.value}>{car.year}</Text>
+            Année : <Text style={styles.value}>{car!.year}</Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Statut:
+            Statut :
             <Text style={styles.value}>
-              {car.status === "active" ? "Disponible" : "Indisponible"}
+              {car!.status === "active" ? "Disponible" : "Indisponible"}
             </Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            N° d&apos;immatriculation:
-            <Text style={styles.value}>{car.registration_number}</Text>
+            Numéro d&apos;immatriculation :
+            <Text style={styles.value}>{car!.registration_number}</Text>
           </Text>
 
-          {car.assigned_user ? (
+          {car!.assigned_user ? (
             <>
               <View
                 style={[
@@ -154,17 +144,19 @@ export default function VehicleDetailPage() {
                 ]}
               />
               <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                Chauffeur Assigné
+                Chauffeur assigné
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Nom: <Text style={styles.value}>{car.assigned_user.name}</Text>
+                Nom :{" "}
+                <Text style={styles.value}>{car!.assigned_user.name}</Text>
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Email:
-                <Text style={styles.value}>{car.assigned_user.email}</Text>
+                E-mail :
+                <Text style={styles.value}>{car!.assigned_user.email}</Text>
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Rôle: <Text style={styles.value}>{car.assigned_user.role}</Text>
+                Rôle :{" "}
+                <Text style={styles.value}>{car!.assigned_user.role}</Text>
               </Text>
             </>
           ) : (
@@ -174,7 +166,7 @@ export default function VehicleDetailPage() {
                 { marginTop: 16, color: theme.colors.text },
               ]}
             >
-              🚫 Ce véhicule n&apos;a pas de chauffeur assigné.
+              🚫 Aucun chauffeur assigné à ce véhicule.
             </Text>
           )}
 
@@ -184,11 +176,11 @@ export default function VehicleDetailPage() {
           </View>
         </View>
 
-        {/* my code start here */}
         <Pressable
           onPress={() =>
             router.navigate({
               pathname: "/vehicles/documents-vehicule",
+              params: { carId: car!.id }, // pass the car ID
             })
           }
           style={({ pressed }) => [
@@ -197,15 +189,15 @@ export default function VehicleDetailPage() {
             // pressed && styles.pressed,
           ]}
         >
-          <Text style={(styles.label, { color: theme.colors.text })}>
-            Documents
-          </Text>
+          <Text style={{ color: theme.colors.text }}>Documents</Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
+
         <Pressable
           onPress={() =>
             router.navigate({
               pathname: "/vehicles/maintenances-vehicule",
+              params: { carId: car!.id }, // pass the car ID
             })
           }
           style={({ pressed }) => [
@@ -214,9 +206,7 @@ export default function VehicleDetailPage() {
             // pressed && styles.pressed,
           ]}
         >
-          <Text style={(styles.label, { color: theme.colors.text })}>
-            Maintenances
-          </Text>
+          <Text style={{ color: theme.colors.text }}>Maintenances</Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
         {errors.length > 0 && (
@@ -247,7 +237,7 @@ export default function VehicleDetailPage() {
               style={[styles.modalBox, { backgroundColor: theme.colors.card }]}
             >
               <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-                Modifier Véhicule
+                Modifier le véhicule
               </Text>
 
               <TextInput
@@ -277,7 +267,7 @@ export default function VehicleDetailPage() {
                 style={[styles.input, { color: theme.colors.text }]}
                 value={editRegistration}
                 onChangeText={setEditRegistration}
-                placeholder="N° d'immatriculation"
+                placeholder="Numéro d'immatriculation"
                 placeholderTextColor="#aaa"
               />
 

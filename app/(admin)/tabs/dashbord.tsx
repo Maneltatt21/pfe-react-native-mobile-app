@@ -46,7 +46,7 @@ export default function AdminDashboard() {
       await logout();
       router.replace("/");
     } catch (err) {
-      console.error("Logout failed:", err);
+      console.error("Échec de la déconnexion:", err);
     }
   };
 
@@ -102,7 +102,7 @@ export default function AdminDashboard() {
               style={[styles.statCard, { backgroundColor: theme.colors.card }]}
             >
               <Text style={[styles.statLabel, { color: theme.colors.text }]}>
-                Véhicules Assigné
+                Véhicules Assignés
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
                 {nbCarsAssigne}
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
               style={[styles.statCard, { backgroundColor: theme.colors.card }]}
             >
               <Text style={[styles.statLabel, { color: theme.colors.text }]}>
-                Véhicules Disponible
+                Véhicules Disponibles
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
                 {nbCarsDisponible}
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
               <Text
                 style={[styles.tableCellHeader, { color: theme.colors.text }]}
               >
-                Model
+                Modèle
               </Text>
             </View>
 
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
               ))
             ) : (
               <Text style={{ color: theme.colors.text, padding: 16 }}>
-                No vehicles found.
+                Aucun véhicule trouvé.
               </Text>
             )}
             <TouchableOpacity
@@ -277,12 +277,12 @@ export default function AdminDashboard() {
         </View>
         <ConfirmModal
           visible={showLogoutModal}
-          title="Logout"
-          message="Are you sure you want to logout?"
+          title="Déconnexion"
+          message="Êtes-vous sûr de vouloir vous déconnecter ?"
           onCancel={() => setShowLogoutModal(false)}
           onConfirm={confirmLogout}
-          confirmText="Logout"
-          cancelText="Cancel"
+          confirmText="Déconnexion"
+          cancelText="Annuler"
         />
         {dropdownVisible && (
           <Pressable
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
                   { color: theme.colors.deleteButton },
                 ]}
               >
-                Logout
+                Déconnexion
               </Text>
             </Pressable>
           </Pressable>

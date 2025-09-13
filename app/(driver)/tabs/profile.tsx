@@ -32,7 +32,7 @@ export default function DriverProfile() {
 
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Email:
+            E-mail :
           </Text>
           <Text style={[styles.value, { color: theme.colors.text }]}>
             {user.email}
@@ -41,7 +41,7 @@ export default function DriverProfile() {
 
         <View style={styles.infoRow}>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Phone:
+            Téléphone :
           </Text>
           <Text style={[styles.value, { color: theme.colors.text }]}>
             {user.phone}
@@ -51,7 +51,7 @@ export default function DriverProfile() {
         <View style={styles.content}>
           <View style={styles.settingRow}>
             <Text style={[styles.label, { color: theme.colors.text }]}>
-              Dark Mode
+              Mode sombre
             </Text>
             <Switch
               value={theme.isDark}

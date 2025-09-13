@@ -21,17 +21,14 @@ interface ExchangesState {
   isLoading: boolean;
   setExchanges: (exchanges: Exchange[]) => void;
   setLoading: (isLoading: boolean) => void;
-  fetchExchanges: () => Promise<void>;
   fetchDriverExchanges: () => Promise<void>;
   createExchange: (exchange: CreateExchange) => Promise<void>;
   fetchExchange: (exchangeId: string) => Promise<Exchange | undefined>;
   deleteExchange: (exchangeId: string) => Promise<void>;
   editExchange: (exchangeId: string, exchange: CreateExchange) => Promise<void>;
-  approveExchange: (exchangeId: string) => Promise<void>;
-  rejectExchange: (exchangeId: string) => Promise<void>;
 }
 
-export const useExchangesStore = create<ExchangesState>()(
+export const useDriverExchangesStore = create<ExchangesState>()(
   persist(
     (set, get) => ({
       exchanges: [],
@@ -44,37 +41,6 @@ export const useExchangesStore = create<ExchangesState>()(
       setExchanges: (exchanges) => set({ exchanges }),
       setLoading: (isLoading) => set({ isLoading }),
 
-      fetchExchanges: async () => {
-        set({ isLoading: true });
-        try {
-          const res = await axiosInstance.get<ExchangesResponse>("/exchanges");
-          const exchanges = res.data.data;
-
-          const nbExchanges = exchanges.length;
-
-          const nbExchangesPending = exchanges.filter(
-            (exchange) => exchange.status === "pending"
-          ).length;
-          const nbExchangesApproved = exchanges.filter(
-            (exchange) => exchange.status === "approved"
-          ).length;
-          const nbExchangesRejected = exchanges.filter(
-            (exchange) => exchange.status === "rejected"
-          ).length;
-
-          set({
-            exchanges,
-            nbExchanges,
-            nbExchangesPending,
-            nbExchangesApproved,
-            nbExchangesRejected,
-          });
-        } catch (err) {
-          console.error("fetchExchanges failed:", err);
-        } finally {
-          set({ isLoading: false });
-        }
-      },
       fetchDriverExchanges: async () => {
         set({ isLoading: true });
         try {
@@ -113,7 +79,7 @@ export const useExchangesStore = create<ExchangesState>()(
             "/exchanges",
             exchange
           );
-          await get().fetchExchanges();
+          await get().fetchDriverExchanges();
         } catch (err) {
           console.error("createExchange failed:", err);
           throw err; // Optional: so you can catch in UI
@@ -140,7 +106,7 @@ export const useExchangesStore = create<ExchangesState>()(
           await axiosInstance.delete<{ exchange: Exchange }>(
             `/exchanges/${exchangeId}`
           );
-          await get().fetchExchanges();
+          await get().fetchDriverExchanges();
         } catch (err) {
           console.error("deleteExchange failed:", err);
         } finally {
@@ -151,44 +117,16 @@ export const useExchangesStore = create<ExchangesState>()(
         set({ isLoading: true });
         try {
           await axiosInstance.put(`/exchanges/${exchangeId}`, exchange);
-          await get().fetchExchanges();
+          await get().fetchDriverExchanges();
         } catch (err) {
           console.error("editExchange failed:", err);
         } finally {
           set({ isLoading: false });
         }
       },
-      approveExchange: async (exchangeId: string) => {
-        set({ isLoading: true });
-        try {
-          await axiosInstance.post<{ exchange: Exchange }>(
-            `/exchanges/${exchangeId}/approve`
-          );
-          await get().fetchExchanges();
-        } catch (err) {
-          console.error("approveExchange failed:", err);
-          throw err; // Optional: so you can catch in UI
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-      rejectExchange: async (exchangeId: string) => {
-        set({ isLoading: true });
-        try {
-          await axiosInstance.post<{ exchange: Exchange }>(
-            `/exchanges/${exchangeId}/reject`
-          );
-          await get().fetchExchanges();
-        } catch (err) {
-          console.error("rejectExchange failed:", err);
-          throw err; // Optional: so you can catch in UI
-        } finally {
-          set({ isLoading: false });
-        }
-      },
     }),
     {
-      name: "exchanges-storage",
+      name: "driver-exchanges-storage",
       storage: createJSONStorage(
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         () => require("@react-native-async-storage/async-storage").default

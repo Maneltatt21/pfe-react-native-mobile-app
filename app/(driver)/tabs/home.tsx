@@ -36,7 +36,7 @@ export default function Home() {
   const handleLogout = () => setShowLogoutModal(true);
 
   useEffect(() => {
-    fetchDriverProfile(user?.id!);
+    fetchDriverProfile();
   }, [fetchDriverProfile, user?.id]);
 
   const confirmLogout = async () => {
@@ -45,7 +45,7 @@ export default function Home() {
       await logout();
       router.replace("/"); // redirect to login/root
     } catch (err) {
-      console.error("Logout failed:", err);
+      console.error("Échec de la déconnexion:", err);
     }
   };
 
@@ -78,7 +78,7 @@ export default function Home() {
                 >
                   {user?.name
                     ? user.name.charAt(0).toUpperCase() + user.name.slice(1)
-                    : "Driver"}
+                    : "Chauffeur"}
                 </Text>
                 <Ionicons
                   name={dropdownVisible ? "chevron-up" : "chevron-down"}
@@ -110,7 +110,7 @@ export default function Home() {
                       { color: theme.colors.error || "red" },
                     ]}
                   >
-                    Logout
+                    Déconnexion
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -234,12 +234,12 @@ export default function Home() {
 
         <ConfirmModal
           visible={showLogoutModal}
-          title="Logout"
-          message="Are you sure you want to logout?"
+          title="Déconnexion"
+          message="Êtes-vous sûr de vouloir vous déconnecter ?"
           onCancel={() => setShowLogoutModal(false)}
           onConfirm={confirmLogout}
-          confirmText="Logout"
-          cancelText="Cancel"
+          confirmText="Déconnexion"
+          cancelText="Annuler"
         />
       </ScrollView>
     </Pressable>

@@ -29,15 +29,12 @@ export const useCarsStore = create<CarsState>()(
       isLoading: false,
       setCars: (cars) => set({ cars }),
       setLoading: (isLoading) => set({ isLoading }),
-
       fetchCars: async () => {
         set({ isLoading: true });
         try {
           const res = await axiosInstance.get<VehiclesResponse>("/vehicles");
-          const cars = res.data.data;
-          const filteredCars = res.data.data.filter(
-            (car) => car.status !== "archived"
-          );
+          const cars = res.data?.data ?? []; // fallback to empty array
+          const filteredCars = cars.filter((car) => car.status !== "archived");
           const nbCars = cars.length;
           const nbCarsAssigne = cars.filter(
             (car) => car.assigned_user !== null
@@ -58,6 +55,7 @@ export const useCarsStore = create<CarsState>()(
           set({ isLoading: false });
         }
       },
+
       createCar: async (car: CreateCar) => {
         set({ isLoading: true });
         try {

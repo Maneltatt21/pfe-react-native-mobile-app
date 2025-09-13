@@ -37,12 +37,12 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
+      setError("Veuillez remplir tous les champs");
       return;
     }
 
     if (!email.includes("@")) {
-      setError("Please enter a valid email address");
+      setError("Veuillez saisir une adresse e-mail valide");
       return;
     }
 
@@ -51,23 +51,23 @@ export default function Login() {
     try {
       const success = await login(email, password);
       if (!success) {
-        setError("Invalid credentials");
+        setError("Identifiants invalides");
       }
       // Navigation is handled in useEffect
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.message || "Échec de la connexion. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
   };
   const getFriendlyErrorMessage = (error: string) => {
     switch (error) {
-      case "Please fill in all fields":
-        return "Please enter both email and password.";
-      case "Invalid credentials":
-        return "Incorrect email or password.";
-      case "Login failed. Please try again.":
-        return "Something went wrong.";
+      case "Veuillez remplir tous les champs":
+        return "Veuillez saisir l'e-mail et le mot de passe.";
+      case "Identifiants invalides":
+        return "E-mail ou mot de passe incorrect.";
+      case "Échec de la connexion. Veuillez réessayer.":
+        return "Quelque chose s'est mal passé.";
       default:
         return error; // Fallback to original error if no mapping exists
     }
@@ -75,7 +75,7 @@ export default function Login() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "android" ? "padding" : "height"}
     >
       <StatusBar
         backgroundColor={theme.colors.background}
@@ -92,17 +92,25 @@ export default function Login() {
       >
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.text }]}>
-            Welcome Back
+            AGS Fleet
           </Text>
           <Text style={[styles.subtitle, { color: theme.colors.text }]}>
-            Sign in to your account
+            Portail de gestion
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: theme.colors.text, fontSize: 14 },
+            ]}
+          >
+            Accès sécurisé à vos données de flotte
           </Text>
         </View>
 
         <View style={[styles.form, { backgroundColor: theme.colors.card }]}>
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>
-              Email
+              E-mail
             </Text>
             <View
               style={[
@@ -121,7 +129,7 @@ export default function Login() {
               />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Enter your email"
+                placeholder="Saisissez votre e-mail"
                 placeholderTextColor={theme.colors.border}
                 value={email}
                 onChangeText={setEmail}
@@ -135,7 +143,7 @@ export default function Login() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>
-              Password
+              Mot de passe
             </Text>
             <View
               style={[
@@ -154,7 +162,7 @@ export default function Login() {
               />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Enter your password"
+                placeholder="Saisissez votre mot de passe"
                 placeholderTextColor={theme.colors.border}
                 value={password}
                 onChangeText={setPassword}
@@ -219,7 +227,9 @@ export default function Login() {
                 { color: theme.colors.buttonText },
               ]}
             >
-              {loading || authLoading ? "Signing In..." : "Sign In"}
+              {loading || authLoading
+                ? "Connexion en cours..."
+                : "Se connecter"}
             </Text>
           </TouchableOpacity>
 
@@ -231,7 +241,7 @@ export default function Login() {
               ]}
             />
             <Text style={[styles.dividerText, { color: theme.colors.text }]}>
-              or continue with
+              ou continuer avec
             </Text>
             <View
               style={[
@@ -264,7 +274,7 @@ export default function Login() {
               <Text
                 style={[styles.roleButtonText, { color: theme.colors.text }]}
               >
-                Demo Admin
+                Démo Admin
               </Text>
             </TouchableOpacity>
 
@@ -290,35 +300,31 @@ export default function Login() {
               <Text
                 style={[styles.roleButtonText, { color: theme.colors.text }]}
               >
-                Demo Driver
+                Démo Chauffeur
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: theme.colors.text }]}>
-            Don&apos;t have an account?{" "}
-            <Text
-              style={[styles.signupLink, { color: theme.colors.primary }]}
-              onPress={() => router.push("/signup")}
-            >
-              Sign up
-            </Text>
-          </Text>
-          <Link
-            style={[styles.signupLink, { color: theme.colors.primary }]}
-            href={`http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/documentation`}
-          >
-            Backend link
-          </Link>
-        </View> */}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    marginBottom: 32,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    opacity: 0.8,
+    textAlign: "center",
+  },
   container: {
     flex: 1,
   },
@@ -326,18 +332,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     padding: 20,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
   },
   form: {
     borderRadius: 12,

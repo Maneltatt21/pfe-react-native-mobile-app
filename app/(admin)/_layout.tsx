@@ -38,7 +38,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       <DrawerItem
         label={() => (
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Dashboard
+            Tableau de bord
           </Text>
         )}
         onPress={() => router.replace("../tabs/dashbord")}
@@ -55,7 +55,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       <DrawerItem
         label={() => (
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Substitutions
+            Remplacements
           </Text>
         )}
         onPress={() => router.replace("../screens/substitutions")}

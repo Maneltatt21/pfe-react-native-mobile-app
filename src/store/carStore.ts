@@ -1,24 +1,18 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import axiosInstance from "../api/axiosInstance";
-import {
-  CreateCar,
-  CreateCarMaintenance,
-  defaultVehicle,
-  ErrorEntry,
-  Vehicle,
-} from "../types";
+import { CreateCar, CreateCarMaintenance, ErrorEntry, Vehicle } from "../types";
 
 // Interface for CarState
 interface CarState {
-  car: Vehicle;
+  car: Vehicle | null;
   errors: ErrorEntry[];
   isLoading: boolean;
   setCar: (car: Vehicle) => void;
   setLoading: (isLoading: boolean) => void;
   addError: (error: ErrorEntry) => void;
   clearErrors: () => void;
-  fetchCar: (carId: number) => Promise<Vehicle | undefined>;
+  fetchCar: (carId: number) => Promise<void>;
   editCar: (carId: string, car: CreateCar) => Promise<void>;
   deleteCar: (carId: string) => Promise<void>;
   createCarDocument: (carId: number, document: FormData) => Promise<void>;
@@ -31,7 +25,7 @@ interface CarState {
 export const useCarStore = create<CarState>()(
   persist(
     (set, get) => ({
-      car: defaultVehicle,
+      car: null,
       errors: [],
       isLoading: false,
 
@@ -47,11 +41,11 @@ export const useCarStore = create<CarState>()(
           const { data } = await axiosInstance.get<{ vehicle: Vehicle }>(
             `/vehicles/${carId}`
           );
+          console.log("data:", JSON.stringify(data, null, 2));
           set({ car: data.vehicle });
-          return data.vehicle;
         } catch (err) {
           const errorMessage =
-            err instanceof Error ? err.message : "Unknown error";
+            err instanceof Error ? err.message : "Erreur inconnue";
           set((state) => ({
             errors: [
               ...state.errors,
@@ -62,7 +56,6 @@ export const useCarStore = create<CarState>()(
               },
             ],
           }));
-          console.error("fetchCar failed:", err);
         } finally {
           set({ isLoading: false });
         }
@@ -78,7 +71,7 @@ export const useCarStore = create<CarState>()(
           set({ car: data.vehicle });
         } catch (err) {
           const errorMessage =
-            err instanceof Error ? err.message : "Unknown error";
+            err instanceof Error ? err.message : "Erreur inconnue";
           set((state) => ({
             errors: [
               ...state.errors,
@@ -89,8 +82,6 @@ export const useCarStore = create<CarState>()(
               },
             ],
           }));
-          console.error("editCar failed:", err);
-          throw err; // For UI error handling
         } finally {
           set({ isLoading: false });
         }
@@ -100,10 +91,10 @@ export const useCarStore = create<CarState>()(
         set({ isLoading: true });
         try {
           await axiosInstance.delete(`/vehicles/${carId}`);
-          set({ car: defaultVehicle, errors: [] });
+          set({ car: null, errors: [] });
         } catch (err) {
           const errorMessage =
-            err instanceof Error ? err.message : "Unknown error";
+            err instanceof Error ? err.message : "Erreur inconnue";
           set((state) => ({
             errors: [
               ...state.errors,
@@ -114,7 +105,6 @@ export const useCarStore = create<CarState>()(
               },
             ],
           }));
-          console.error("deleteCar failed:", err);
         } finally {
           set({ isLoading: false });
         }
@@ -135,7 +125,7 @@ export const useCarStore = create<CarState>()(
           set({ car: data.vehicle });
         } catch (err) {
           const errorMessage =
-            err instanceof Error ? err.message : "Unknown error";
+            err instanceof Error ? err.message : "Erreur inconnue";
           set((state) => ({
             errors: [
               ...state.errors,
@@ -154,21 +144,20 @@ export const useCarStore = create<CarState>()(
       },
 
       createCarMaintenance: async (
-        carId: number,
+        vehicle_id: number,
         maintenance: CreateCarMaintenance
       ) => {
         set({ isLoading: true });
         try {
           const { data } = await axiosInstance.post<{ vehicle: Vehicle }>(
-            `/vehicles/${carId}/maintenances`,
+            `/vehicles/${vehicle_id}/maintenances`,
             maintenance
           );
-
-          console.log("result : ", data);
+          console.log("data:", JSON.stringify(data, null, 2));
           set({ car: data.vehicle });
         } catch (err) {
           const errorMessage =
-            err instanceof Error ? err.message : "Unknown error";
+            err instanceof Error ? err.message : "Erreur inconnue";
           set((state) => ({
             errors: [
               ...state.errors,

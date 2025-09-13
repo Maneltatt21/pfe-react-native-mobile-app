@@ -35,14 +35,16 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       {/* Drawer Items */}
       <DrawerItem
         label={() => (
-          <Text style={[styles.label, { color: theme.colors.text }]}>Home</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Accueil
+          </Text>
         )}
         onPress={() => router.push("../tabs/home")}
       />
       <DrawerItem
         label={() => (
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Substitutions
+            Remplacements
           </Text>
         )}
         onPress={() => router.push("../screens/substitutions")}

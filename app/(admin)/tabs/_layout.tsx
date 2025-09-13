@@ -20,7 +20,7 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="dashbord"
         options={{
-          title: "Dashbord",
+          title: "Tableau de bord",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -29,7 +29,7 @@ export default function AdminTabsLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Setteings",
+          title: "Paramètres",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),

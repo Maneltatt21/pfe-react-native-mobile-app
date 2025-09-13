@@ -19,13 +19,13 @@ export default function AdminSettings() {
         ]}
       >
         <Text style={[styles.appBarText, { color: theme.colors.text }]}>
-          Settings
+          Paramètres
         </Text>
       </View>
       <View style={styles.content}>
         <View style={styles.settingRow}>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Dark Mode
+            Mode Sombre
           </Text>
           <Switch
             value={theme.isDark}

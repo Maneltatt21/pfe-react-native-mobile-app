@@ -8,7 +8,8 @@ import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
 import Constants from "expo-constants";
 import * as DocumentPicker from "expo-document-picker";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Button,
@@ -28,6 +29,7 @@ export const unstable_settings = { drawer: null };
 export default function VehicleMaintenancesPage() {
   const { theme } = useTheme();
   const { car, fetchCar } = useCarStore();
+  const { carId } = useLocalSearchParams();
 
   /* --- modal & form state ------------------------------------------------- */
   const [visible, setVisible] = useState(false);
@@ -42,6 +44,9 @@ export default function VehicleMaintenancesPage() {
   const [showDate, setShowDate] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
 
+  useEffect(() => {
+    fetchCar(Number(carId[0]));
+  }, [carId, fetchCar]);
   /* --- pick invoice file -------------------------------------------------- */
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({
@@ -52,8 +57,8 @@ export default function VehicleMaintenancesPage() {
 
   /* --- submit ------------------------------------------------------------- */
   const onSubmit = async () => {
-    if (!date || !reminder || !invoice) {
-      console.log("No file , date or reminder ");
+    if (!type || !description || !date || !reminder || !invoice) {
+      console.log("All fields are required");
       return;
     }
     // Get the stored auth data
@@ -84,8 +89,9 @@ export default function VehicleMaintenancesPage() {
     console.log(form);
     try {
       // const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
+      console.log("car id :", carId);
       const res = await axios.post(
-        `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${car.id}/maintenances`,
+        `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${carId}/maintenances`,
         form,
         {
           headers: {
@@ -94,8 +100,8 @@ export default function VehicleMaintenancesPage() {
           },
         }
       );
-      console.log("resultat : ", res);
-      await fetchCar(car.id);
+      console.log("data:", JSON.stringify(res, null, 2));
+      await fetchCar(car!.id);
       setVisible(false);
       setDescription("");
       setDate("");
@@ -146,12 +152,12 @@ export default function VehicleMaintenancesPage() {
             </View>
 
             {/* rows */}
-            {!car.maintenances?.length ? (
+            {car!.maintenances?.length ? (
               <Text style={{ color: theme.colors.text, padding: 16 }}>
                 Aucun entretien disponible.
               </Text>
             ) : (
-              car.maintenances.map((m) => (
+              car!.maintenances.map((m) => (
                 <View
                   key={m.id}
                   style={[
@@ -251,7 +257,7 @@ export default function VehicleMaintenancesPage() {
               <Picker.Item label="Brake Service" value="Brake Service" />
             </Picker>
             <TextInput
-              placeholder="Description (optionnel)"
+              placeholder="Description"
               placeholderTextColor={theme.colors.text}
               value={description}
               onChangeText={setDescription}
