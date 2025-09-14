@@ -232,7 +232,7 @@ export default function Login() {
                 : "Se connecter"}
             </Text>
           </TouchableOpacity>
-
+          {/* 
           <View style={styles.divider}>
             <View
               style={[
@@ -303,7 +303,7 @@ export default function Login() {
                 Démo Chauffeur
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -118,7 +118,7 @@ export default function AddDriver() {
 
   return (
     <Container>
-      <BackHeader title="Create Driver" />
+      <BackHeader title="Créer un chauffeur" />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         behavior={Platform.OS === "android" ? "padding" : "height"}
@@ -134,7 +134,7 @@ export default function AddDriver() {
           <View style={[styles.form, { backgroundColor: theme.colors.card }]}>
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Full Name
+                Nom complet
               </Text>
               <View
                 style={[
@@ -153,7 +153,7 @@ export default function AddDriver() {
                 />
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Enter your full name"
+                  placeholder="Entrez le nom complet"
                   placeholderTextColor={theme.colors.border}
                   value={formData.fullName}
                   onChangeText={(value) => handleInputChange("fullName", value)}
@@ -185,7 +185,7 @@ export default function AddDriver() {
                 />
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Enter your email"
+                  placeholder="Entrez votre adresse e-mail"
                   placeholderTextColor={theme.colors.border}
                   value={formData.email}
                   onChangeText={(value) => handleInputChange("email", value)}
@@ -199,7 +199,7 @@ export default function AddDriver() {
 
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Password
+                Mot de passe
               </Text>
               <View
                 style={[
@@ -218,7 +218,7 @@ export default function AddDriver() {
                 />
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Enter your password"
+                  placeholder="Entrez un mot de passe"
                   placeholderTextColor={theme.colors.border}
                   value={formData.password}
                   onChangeText={(value) => handleInputChange("password", value)}
@@ -242,7 +242,7 @@ export default function AddDriver() {
 
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                Confirm Password
+                Confirmer le mot de passe
               </Text>
               <View
                 style={[
@@ -261,7 +261,7 @@ export default function AddDriver() {
                 />
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Confirm your password"
+                  placeholder="Confirmez le mot de passe"
                   placeholderTextColor={theme.colors.border}
                   value={formData.confirmPassword}
                   onChangeText={(value) =>
@@ -330,8 +330,8 @@ export default function AddDriver() {
                 ]}
               >
                 {isLoading || authLoading
-                  ? "Creating Account..."
-                  : "Create Account"}
+                  ? "Créer un chauffeur..."
+                  : "Créer un chauffeur"}
               </Text>
             </TouchableOpacity>
           </View>

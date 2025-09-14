@@ -46,17 +46,17 @@ export default function SubstitutionsPage() {
 
   const handleAdd = async () => {
     if (!form.to_driver_id || !form.vehicle_id) {
-      Alert.alert("Error", "Please fill all required fields.");
+      Alert.alert("Erreur", "Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
     try {
       await createExchange({
-        from_driver_id: 1, // Replace with CURRENT_USER_ID if needed
+        from_driver_id: 1, // Remplacer par CURRENT_USER_ID si nécessaire
         to_driver_id: form.to_driver_id,
         vehicle_id: form.vehicle_id,
         note: form.note || undefined,
-        // image: form.image || undefined, // handle image upload separately
+        // image: form.image || undefined, // gérer le téléchargement d'image séparément
       });
 
       setForm({
@@ -67,7 +67,7 @@ export default function SubstitutionsPage() {
       });
       setShowModal(false);
     } catch (err) {
-      Alert.alert("Error", "Failed to create exchange.");
+      Alert.alert("Erreur", "Échec de la création de l’échange.");
     }
   };
 
@@ -82,17 +82,17 @@ export default function SubstitutionsPage() {
         </Text>
       </View>
       <Text style={[styles.vehicle, { color: theme.colors.text }]}>
-        Vehicle Model: {item.vehicle.model}
+        Modèle du véhicule : {item.vehicle.model}
       </Text>
       <Text style={[styles.status, { color: theme.colors.text }]}>
-        Status: {item.status}
+        Statut : {item.status}
       </Text>
     </TouchableOpacity>
   );
 
   return (
     <Container>
-      <BackHeader title="My Substitutions" />
+      <BackHeader title="Mes substitutions" />
 
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
@@ -111,13 +111,13 @@ export default function SubstitutionsPage() {
           renderItem={renderItem}
           ListEmptyComponent={
             <Text style={{ color: theme.colors.text, textAlign: "center" }}>
-              No substitutions found
+              Aucune substitution trouvée
             </Text>
           }
         />
       )}
 
-      {/* Modal Form */}
+      {/* Formulaire dans une fenêtre modale */}
       <Modal visible={showModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View
@@ -127,12 +127,12 @@ export default function SubstitutionsPage() {
             ]}
           >
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              New Exchange
+              Nouvel échange
             </Text>
 
-            {/* Vehicle Picker */}
+            {/* Sélecteur de véhicule */}
             <Text style={{ color: theme.colors.text, marginBottom: 4 }}>
-              Select Vehicle
+              Sélectionner un véhicule
             </Text>
             <View style={[styles.input, { padding: 0 }]}>
               <Picker
@@ -147,7 +147,7 @@ export default function SubstitutionsPage() {
                 }}
                 style={{ color: theme.colors.text }}
               >
-                <Picker.Item label="Select vehicle" value={null} />
+                <Picker.Item label="Choisir un véhicule" value={null} />
                 {cars.map((car) => (
                   <Picker.Item
                     key={car.id}
@@ -158,34 +158,24 @@ export default function SubstitutionsPage() {
               </Picker>
             </View>
 
-            {/* Auto-filled To Driver ID */}
-            {/* <TextInput
-              placeholder="To Driver ID"
-              placeholderTextColor="#999"
-              keyboardType="numeric"
-              style={[styles.input, { color: theme.colors.text }]}
-              value={form.to_driver_id ? form.to_driver_id.toString() : ""}
-              onChangeText={(v) =>
-                setForm({ ...form, to_driver_id: Number(v) })
-              }
-            /> */}
-
-            {/* Optional Note */}
+            {/* Note optionnelle */}
             <TextInput
-              placeholder="Note (optional)"
+              placeholder="Note (optionnel)"
               placeholderTextColor="#999"
               style={[styles.input, { color: theme.colors.text }]}
               value={form.note}
               onChangeText={(v) => setForm({ ...form, note: v })}
             />
 
-            {/* Image Picker */}
+            {/* Sélecteur d’image */}
             <TouchableOpacity
               style={[styles.imagePicker, { borderColor: theme.colors.border }]}
               onPress={async () => {
                 const result = await ImagePicker.launchImageLibraryAsync({
                   mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                  quality: 0.7,
+                  allowsEditing: false,
+                  aspect: [4, 3],
+                  quality: 1,
                 });
                 if (!result.canceled) {
                   setForm({ ...form, image: result.assets[0].uri });
@@ -193,31 +183,29 @@ export default function SubstitutionsPage() {
               }}
             >
               {form.image ? (
-                <Image
-                  source={{ uri: form.image }}
-                  style={{ width: 80, height: 80, borderRadius: 8 }}
-                />
+                <Image source={{ uri: form.image }} style={styles.image} />
               ) : (
-                <Text style={{ color: theme.colors.text }}>Select Image</Text>
+                <Text style={{ color: theme.colors.text }}>
+                  Sélectionner une image
+                </Text>
               )}
             </TouchableOpacity>
 
-            {/* Actions */}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#ccc" }]}
-                onPress={() => setShowModal(false)}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
+            <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[
-                  styles.actionButton,
+                  styles.button,
                   { backgroundColor: theme.colors.primary },
                 ]}
                 onPress={handleAdd}
               >
-                <Text style={{ color: "#fff" }}>Save</Text>
+                <Text style={styles.buttonText}>Ajouter</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: theme.colors.error }]}
+                onPress={() => setShowModal(false)}
+              >
+                <Text style={styles.buttonText}>Annuler</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -228,79 +216,90 @@ export default function SubstitutionsPage() {
 }
 
 const styles = StyleSheet.create({
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 12,
-    borderRadius: 8,
-    marginVertical: 12,
-  },
-  addText: {
-    color: "#fff",
-    marginLeft: 8,
-    fontSize: 16,
-  },
   card: {
     padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+    borderRadius: 12,
+    marginVertical: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
   },
   date: {
     fontSize: 12,
   },
   vehicle: {
-    fontSize: 14,
-    marginBottom: 4,
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: "600",
   },
   status: {
+    marginTop: 4,
     fontSize: 14,
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  addText: {
+    color: "#fff",
+    marginLeft: 6,
     fontWeight: "bold",
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-    alignItems: "center",
+    padding: 20,
   },
   modalContent: {
-    width: "90%",
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 20,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
+    borderRadius: 8,
     padding: 10,
-    marginBottom: 10,
+    marginVertical: 8,
   },
   imagePicker: {
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 8,
     padding: 10,
+    marginVertical: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    height: 120,
   },
-  modalActions: {
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+  },
+  modalButtons: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
+    justifyContent: "space-between",
+    marginTop: 16,
   },
-  actionButton: {
-    padding: 10,
-    borderRadius: 6,
-    marginLeft: 8,
+  button: {
+    flex: 1,
+    marginHorizontal: 4,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

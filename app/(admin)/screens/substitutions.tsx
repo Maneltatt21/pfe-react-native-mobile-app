@@ -32,15 +32,14 @@ const ExchangesScreen = () => {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    { key: "pending", title: `Pending (${nbExchangesPending})` },
-    { key: "approved", title: `Approved (${nbExchangesApproved})` },
-    { key: "rejected", title: `Rejected (${nbExchangesRejected})` },
+    { key: "pending", title: `En attente (${nbExchangesPending})` },
+    { key: "approved", title: `Approuvés (${nbExchangesApproved})` },
+    { key: "rejected", title: `Rejetés (${nbExchangesRejected})` },
   ]);
 
   useEffect(() => {
     fetchExchanges();
   }, [fetchExchanges]);
-  // console.log("exchanges :", JSON.stringify(exchanges, null, 2));
 
   const renderExchangeCard = (exchange: Exchange) => (
     <View
@@ -54,22 +53,22 @@ const ExchangesScreen = () => {
       ]}
     >
       <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-        Exchange #{exchange.id}
+        Échange #{exchange.id}
       </Text>
       <Text style={{ color: theme.colors.text }}>
-        <Text style={styles.label}>Status:</Text> {exchange.status}
+        <Text style={styles.label}>Statut :</Text> {exchange.status}
       </Text>
       <Text style={{ color: theme.colors.text }}>
-        <Text style={styles.label}>Note:</Text> {exchange.note}
+        <Text style={styles.label}>Note :</Text> {exchange.note}
       </Text>
       <Text style={{ color: theme.colors.text }}>
-        <Text style={styles.label}>Request Date:</Text>{" "}
+        <Text style={styles.label}>Date de demande :</Text>{" "}
         {new Date(exchange.request_date).toLocaleString()}
       </Text>
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Vehicle
+          Véhicule
         </Text>
         <Text style={{ color: theme.colors.text }}>
           {exchange.vehicle.model} ({exchange.vehicle.registration_number}) -{" "}
@@ -79,7 +78,7 @@ const ExchangesScreen = () => {
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          From Driver
+          De conducteur
         </Text>
         <Text style={{ color: theme.colors.text }}>
           {exchange.from_driver.name} ({exchange.from_driver.email})
@@ -88,7 +87,7 @@ const ExchangesScreen = () => {
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          To Driver
+          À conducteur
         </Text>
         <Text style={{ color: theme.colors.text }}>
           {exchange.to_driver.name} ({exchange.to_driver.email})
@@ -97,7 +96,7 @@ const ExchangesScreen = () => {
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Before Photo
+          Photo avant
         </Text>
         <Image
           source={{
@@ -116,11 +115,11 @@ const ExchangesScreen = () => {
               try {
                 await approveExchange(exchange.id.toString());
               } catch (err) {
-                console.error("Failed to approve exchange:", err);
+                console.error("Échec de l'approbation de l'échange :", err);
               }
             }}
           >
-            <Text style={styles.buttonText}>Approve</Text>
+            <Text style={styles.buttonText}>Approuver</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.colors.error }]}
@@ -128,11 +127,11 @@ const ExchangesScreen = () => {
               try {
                 await rejectExchange(exchange.id.toString());
               } catch (err) {
-                console.error("Failed to reject exchange:", err);
+                console.error("Échec du rejet de l'échange :", err);
               }
             }}
           >
-            <Text style={styles.buttonText}>Reject</Text>
+            <Text style={styles.buttonText}>Rejeter</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -143,7 +142,7 @@ const ExchangesScreen = () => {
     <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
       {exchanges.filter((e) => e.status === "pending").length === 0 ? (
         <Text style={[styles.noData, { color: theme.colors.text }]}>
-          No pending exchanges available.
+          Aucun échange en attente disponible.
         </Text>
       ) : (
         exchanges
@@ -157,7 +156,7 @@ const ExchangesScreen = () => {
     <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
       {exchanges.filter((e) => e.status === "approved").length === 0 ? (
         <Text style={[styles.noData, { color: theme.colors.text }]}>
-          No approved exchanges available.
+          Aucun échange approuvé disponible.
         </Text>
       ) : (
         exchanges
@@ -171,7 +170,7 @@ const ExchangesScreen = () => {
     <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
       {exchanges.filter((e) => e.status === "rejected").length === 0 ? (
         <Text style={[styles.noData, { color: theme.colors.text }]}>
-          No rejected exchanges available.
+          Aucun échange rejeté disponible.
         </Text>
       ) : (
         exchanges
@@ -181,39 +180,30 @@ const ExchangesScreen = () => {
     </ScrollView>
   );
 
-  const renderScene = SceneMap({
-    pending: PendingRoute,
-    approved: ApprovedRoute,
-    rejected: RejectedRoute,
-  });
-
-  if (isLoading) {
-    return (
-      <Container>
-        <BackHeader title="Exchange Requests" />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </Container>
-    );
-  }
-
   return (
     <Container>
-      <BackHeader title="Exchange Requests" />
-      <TabView
-        navigationState={{ index, routes }}
-        renderScene={renderScene}
-        onIndexChange={setIndex}
-        initialLayout={{ width: layout.width }}
-        renderTabBar={(props) => (
-          <TabBar
-            {...props}
-            style={{ backgroundColor: theme.colors.background }}
-            indicatorStyle={{ backgroundColor: theme.colors.primary }}
-          />
-        )}
-      />
+      <BackHeader title="Échanges" />
+      {isLoading ? (
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      ) : (
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={SceneMap({
+            pending: PendingRoute,
+            approved: ApprovedRoute,
+            rejected: RejectedRoute,
+          })}
+          onIndexChange={setIndex}
+          initialLayout={{ width: layout.width }}
+          renderTabBar={(props) => (
+            <TabBar
+              {...props}
+              style={{ backgroundColor: theme.colors.background }}
+              indicatorStyle={{ backgroundColor: theme.colors.primary }}
+            />
+          )}
+        />
+      )}
     </Container>
   );
 };
