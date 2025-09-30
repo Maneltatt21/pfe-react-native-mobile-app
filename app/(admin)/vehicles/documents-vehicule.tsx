@@ -2,14 +2,12 @@ import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
 import { useCarStore } from "@/src/store/carStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import axios from "axios";
 import Constants from "expo-constants";
 import * as DocumentPicker from "expo-document-picker";
-import mime from "react-native-mime-types";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -27,95 +25,147 @@ export const unstable_settings = { drawer: null };
 
 export default function VehicleDocumentsPage() {
   const { theme } = useTheme();
-  const { car, fetchCar } = useCarStore();
+  const { car, fetchCar, createCarDocument } = useCarStore();
 
-  /* --- local state ------------------------------------------------------- */
   const [isModalVisible, setModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // <-- spinner flag
+  const [isLoading, setIsLoading] = useState(false);
   const [type, setType] = useState("carte_grise");
   const [expirationDate, setExpirationDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [file, setFile] = useState<DocumentPicker.DocumentPickerAsset | null>(
     null
   );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  /* --- pick file ---------------------------------------------------------- */
+  // Get today's date for minimum date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day
+
+  /* Pick document */
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["application/pdf", "image/*"],
+        copyToCacheDirectory: true, // Important for React Native
       });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const pickedFile = result.assets[0];
-        setFile(pickedFile);
-        console.log("File selected:", pickedFile);
+      if (!result.canceled && result.assets?.length) {
+        setFile(result.assets[0]);
+        setErrorMessage(null); // Clear previous errors
+        console.log("File selected:", result.assets[0]);
       }
     } catch (error) {
       console.error("Error picking document:", error);
+      setErrorMessage("Erreur lors de la sélection du fichier");
     }
   };
 
-  /* --- upload ------------------------------------------------------------- */
+  /* Upload */
   const handleAddDocument = async () => {
-    if (!file || !expirationDate) {
-      console.log("No file or expiration date");
-      return;
-    }
-    const uploadUrl = `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${car.id}/documents`;
-    // Get the stored auth data
-    const authStorage = await AsyncStorage.getItem("auth-storage");
-    if (!authStorage) {
-      console.log("No auth data found");
+    if (!file || !expirationDate || !car?.id) {
+      setErrorMessage("Veuillez remplir tous les champs");
       return;
     }
 
-    const parsedAuth = JSON.parse(authStorage);
-    const token = parsedAuth.state?.token; // extract token
-    if (!token) {
-      console.log("No token found in auth storage");
+    // Validate date is not in the past
+    const selectedDate = new Date(expirationDate);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setErrorMessage("La date d'expiration ne peut pas être dans le passé");
       return;
     }
-    setIsLoading(true); // show spinner
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
     try {
+      // Get token
+      const authStorage = await AsyncStorage.getItem("auth-storage");
+      if (!authStorage) throw new Error("No auth data");
+
+      const { state } = JSON.parse(authStorage);
+      const token = state?.token;
+      if (!token) throw new Error("No token found");
+
+      // Create FormData
       const formData = new FormData();
       formData.append("type", type);
       formData.append("expiration_date", expirationDate);
       formData.append("file", {
         uri: file.uri,
-        type:
-          mime.lookup(file.name) || file.mimeType || "application/octet-stream",
+        type: file.mimeType || "image/png",
         name: file.name,
       } as any);
 
-      await axios.post(uploadUrl, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      console.log("📤 Uploading with fetch...");
 
-      await fetchCar(car.id); // refresh store
+      // Use fetch instead of axios
+      const response = await fetch(
+        `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${car.id}/documents`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          body: formData,
+        }
+      );
+
+      console.log("📨 Fetch response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("✅ Upload successful:", result);
+
+      // Refresh data using your store
+      await fetchCar(car.id);
+
+      // Reset form
       setFile(null);
       setExpirationDate("");
-    } catch (err) {
-      console.error("Upload error:", err);
-    } finally {
-      setIsLoading(false); // hide spinner
       setModalVisible(false);
+    } catch (err: any) {
+      console.error("❌ Upload failed:", err);
+      setErrorMessage(err.message || "Erreur lors de l'upload");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  /* --- date picker -------------------------------------------------------- */
   const handleDateChange = (_: any, selectedDate?: Date) => {
-    if (selectedDate)
+    if (selectedDate) {
+      // Validate the selected date is not in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      selectedDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate < today) {
+        setErrorMessage("La date d'expiration ne peut pas être dans le passé");
+        setShowDatePicker(false);
+        return;
+      }
+
       setExpirationDate(selectedDate.toISOString().split("T")[0]);
+      setErrorMessage(null); // Clear any previous date errors
+    }
     setShowDatePicker(false);
   };
 
-  /* ----------------------------------------------------------------------- */
-  /* ------------------------------  UI  ---------------------------------- */
-  /* ----------------------------------------------------------------------- */
+  // Helper function to check if a date is valid (not in past)
+  const isDateValid = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setHours(0, 0, 0, 0);
+    return date >= today;
+  };
+
   return (
     <Container>
       <BackHeader title="Documents" />
@@ -127,7 +177,7 @@ export default function VehicleDocumentsPage() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-          {!car.documents || car.documents.length === 0 ? (
+          {!car?.documents || car.documents.length === 0 ? (
             <Text style={{ color: theme.colors.text, padding: 16 }}>
               Aucun document disponible.
             </Text>
@@ -152,7 +202,13 @@ export default function VehicleDocumentsPage() {
                 <Text
                   style={[
                     styles.tableCell,
-                    { color: "blue", textDecorationLine: "underline" },
+                    {
+                      color:
+                        doc.expiration_date && !isDateValid(doc.expiration_date)
+                          ? theme.colors.error
+                          : "blue",
+                      textDecorationLine: "underline",
+                    },
                   ]}
                   onPress={() => {
                     if (doc.file_path) {
@@ -175,7 +231,10 @@ export default function VehicleDocumentsPage() {
               styles.tableRowAdd,
               { backgroundColor: theme.colors.primary },
             ]}
-            onPress={() => setModalVisible(true)}
+            onPress={() => {
+              setModalVisible(true);
+              setErrorMessage(null); // Clear errors when opening modal
+            }}
           >
             <Text style={{ color: "#fff", fontWeight: "600" }}>
               + Ajouter un document
@@ -183,7 +242,7 @@ export default function VehicleDocumentsPage() {
           </TouchableOpacity>
         </View>
 
-        {/* --------------- ADD-DOCUMENT MODAL --------------- */}
+        {/* Modal */}
         <Modal
           visible={isModalVisible}
           animationType="slide"
@@ -201,31 +260,57 @@ export default function VehicleDocumentsPage() {
                 Nouveau Document
               </Text>
 
-              <Picker
-                selectedValue={type}
-                onValueChange={setType}
+              {/* Error Message */}
+              {errorMessage && (
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {errorMessage}
+                </Text>
+              )}
+
+              <View
                 style={{
-                  color: theme.colors.text,
-                  borderColor: theme.colors.border,
                   borderWidth: 1,
+                  borderColor: theme.colors.border,
                   borderRadius: 8,
                   marginBottom: 12,
                 }}
               >
-                <Picker.Item label="Carte Grise" value="carte_grise" />
-                <Picker.Item label="Assurance" value="assurance" />
-                <Picker.Item
-                  label="Contrôle Technique"
-                  value="controle_technique"
-                />
-              </Picker>
+                <Picker
+                  selectedValue={type}
+                  onValueChange={setType}
+                  style={{ color: theme.colors.text }}
+                >
+                  <Picker.Item label="Carte Grise" value="carte_grise" />
+                  <Picker.Item label="Assurance" value="assurance" />
+                  <Picker.Item
+                    label="Contrôle Technique"
+                    value="controle_technique"
+                  />
+                </Picker>
+              </View>
 
               <TouchableOpacity
                 onPress={() => setShowDatePicker(true)}
-                style={styles.fakeInput}
+                style={[
+                  styles.fakeInput,
+                  {
+                    borderColor:
+                      expirationDate && !isDateValid(expirationDate)
+                        ? theme.colors.error
+                        : theme.colors.border,
+                  },
+                ]}
               >
                 <Text
-                  style={[styles.fakeInputText, { color: theme.colors.text }]}
+                  style={[
+                    styles.fakeInputText,
+                    {
+                      color:
+                        expirationDate && !isDateValid(expirationDate)
+                          ? theme.colors.error
+                          : theme.colors.text,
+                    },
+                  ]}
                 >
                   {expirationDate
                     ? new Date(expirationDate).toLocaleDateString()
@@ -239,10 +324,14 @@ export default function VehicleDocumentsPage() {
                   mode="date"
                   display="default"
                   onChange={handleDateChange}
+                  minimumDate={today} // This prevents selecting past dates in the picker
                 />
               )}
 
-              <TouchableOpacity onPress={pickDocument} style={styles.fakeInput}>
+              <TouchableOpacity
+                onPress={pickDocument}
+                style={[styles.fakeInput, { borderColor: theme.colors.border }]}
+              >
                 <Text
                   style={[styles.fakeInputText, { color: theme.colors.text }]}
                   numberOfLines={1}
@@ -251,7 +340,6 @@ export default function VehicleDocumentsPage() {
                 </Text>
               </TouchableOpacity>
 
-              {/* ---- buttons with spinner ---- */}
               <View style={styles.modalActions}>
                 <Button
                   title="Annuler"
@@ -266,7 +354,7 @@ export default function VehicleDocumentsPage() {
                   <Button
                     title="Ajouter"
                     onPress={handleAddDocument}
-                    disabled={!file || !expirationDate}
+                    disabled={!file || !expirationDate || isLoading}
                   />
                 )}
               </View>
@@ -281,10 +369,7 @@ export default function VehicleDocumentsPage() {
 /* ---------------- styles ---------------- */
 const styles = StyleSheet.create({
   content: { flex: 1 },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingVertical: 30,
-  },
+  scrollContainer: { flexGrow: 1, paddingVertical: 30 },
   fakeInput: {
     borderWidth: 1,
     borderRadius: 8,
@@ -293,19 +378,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     justifyContent: "center",
   },
-  fakeInputText: {
-    fontSize: 14,
-  },
+  fakeInputText: { fontSize: 14 },
   tableRow: {
     flexDirection: "row",
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
-  tableCell: {
-    flex: 1,
-    fontSize: 14,
-    textAlign: "center",
-  },
+  tableCell: { flex: 1, fontSize: 14, textAlign: "center" },
   tableRowAdd: {
     flexDirection: "row",
     justifyContent: "center",
@@ -320,19 +399,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  modalContent: {
-    width: "90%",
-    borderRadius: 12,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
+  modalContent: { width: "90%", borderRadius: 12, padding: 20 },
+  modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 12 },
   modalActions: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
+  },
+  errorText: {
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: "center",
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,0,0,0.1)",
   },
 });

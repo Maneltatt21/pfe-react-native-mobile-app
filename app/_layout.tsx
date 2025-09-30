@@ -3,7 +3,7 @@ import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { AuthProvider } from "./components/authProvider";
+import AuthProvider from "./components/authProvider";
 
 export default function RootLayout() {
   return (

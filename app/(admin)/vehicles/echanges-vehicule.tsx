@@ -12,6 +12,20 @@ export default function VehicleEchangesPage() {
   const { theme } = useTheme();
   const { car } = useCarStore();
 
+  // Handle case when car is null or undefined
+  if (!car) {
+    return (
+      <Container>
+        <BackHeader title="Échanges" />
+        <View style={styles.content}>
+          <Text style={{ color: theme.colors.text, padding: 16 }}>
+            Aucun véhicule sélectionné.
+          </Text>
+        </View>
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <BackHeader title="Échanges" />
@@ -68,7 +82,7 @@ export default function VehicleEchangesPage() {
           </View>
 
           {/* Rows */}
-          {car.exchanges?.length === 0 || !car.exchanges ? (
+          {!car.exchanges || car.exchanges.length === 0 ? (
             <Text style={{ color: theme.colors.text, padding: 16 }}>
               Aucun échange disponible.
             </Text>

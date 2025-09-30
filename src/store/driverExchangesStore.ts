@@ -9,6 +9,7 @@ export interface CreateExchange {
   to_driver_id: number;
   vehicle_id: number;
   note?: string;
+  before_photo: File;
 }
 
 // Interface for ExchangesState
@@ -22,7 +23,7 @@ interface ExchangesState {
   setExchanges: (exchanges: Exchange[]) => void;
   setLoading: (isLoading: boolean) => void;
   fetchDriverExchanges: () => Promise<void>;
-  createExchange: (exchange: CreateExchange) => Promise<void>;
+  createExchange: (exchange: FormData) => Promise<void>;
   fetchExchange: (exchangeId: string) => Promise<Exchange | undefined>;
   deleteExchange: (exchangeId: string) => Promise<void>;
   editExchange: (exchangeId: string, exchange: CreateExchange) => Promise<void>;
@@ -72,12 +73,18 @@ export const useDriverExchangesStore = create<ExchangesState>()(
           set({ isLoading: false });
         }
       },
-      createExchange: async (exchange: CreateExchange) => {
+      createExchange: async (exchange: FormData) => {
         set({ isLoading: true });
         try {
           await axiosInstance.post<{ exchange: Exchange }>(
             "/exchanges",
-            exchange
+            exchange,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                // Don't manually set other headers - let axios handle it
+              },
+            }
           );
           await get().fetchDriverExchanges();
         } catch (err) {

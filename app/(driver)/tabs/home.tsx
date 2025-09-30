@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Image,
   Pressable,
@@ -31,21 +31,58 @@ export default function Home() {
   const { driver, fetchDriverProfile } = useDriverStore();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const isMounted = useRef(true);
 
   const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
   const handleLogout = () => setShowLogoutModal(true);
 
   useEffect(() => {
-    fetchDriverProfile();
+    if (isMounted.current && user?.id) {
+      fetchDriverProfile();
+    }
   }, [fetchDriverProfile, user?.id]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const confirmLogout = async () => {
+    if (!isMounted.current) return;
+
     setShowLogoutModal(false);
+
     try {
+      // Let the AuthProvider handle navigation - don't call router.replace here
       await logout();
-      router.replace("/"); // redirect to login/root
     } catch (err) {
       console.error("Échec de la déconnexion:", err);
+      // Only show error if component is still mounted
+      if (isMounted.current) {
+        // Handle error - maybe show a toast or alert
+      }
+    }
+  };
+
+  const navigateToDocuments = () => {
+    if (!isMounted.current || !driver?.vehicle) return;
+
+    try {
+      router.push("/(driver)/screens/driver-documents");
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
+  };
+
+  const navigateToMaintenances = () => {
+    if (!isMounted.current || !driver?.vehicle) return;
+
+    try {
+      router.push("/(driver)/screens/driver-maintenaces");
+    } catch (error) {
+      console.error("Navigation error:", error);
     }
   };
 
@@ -189,12 +226,7 @@ export default function Home() {
           {/* Links */}
           <Pressable
             disabled={!driver?.vehicle}
-            onPress={() =>
-              driver?.vehicle &&
-              router.navigate({
-                pathname: "/(driver)/screens/driver-documents",
-              })
-            }
+            onPress={navigateToDocuments}
             style={[
               styles.row,
               {
@@ -211,12 +243,7 @@ export default function Home() {
 
           <Pressable
             disabled={!driver?.vehicle}
-            onPress={() =>
-              driver?.vehicle &&
-              router.navigate({
-                pathname: "/(driver)/screens/driver-maintenaces",
-              })
-            }
+            onPress={navigateToMaintenances}
             style={[
               styles.row,
               {

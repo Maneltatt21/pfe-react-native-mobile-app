@@ -1,8 +1,7 @@
 // store/carsStore.ts
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 import axiosInstance from "../api/axiosInstance";
-import { CreateCar, Vehicle, VehiclesResponse } from "../models/car.model";
+import { CreateCar, Vehicle } from "../models/car.model";
 
 interface CarsState {
   cars: Vehicle[];
@@ -19,99 +18,90 @@ interface CarsState {
   editCar: (carId: string, car: CreateCar) => Promise<void>;
 }
 
-export const useCarsStore = create<CarsState>()(
-  persist(
-    (set, get) => ({
-      cars: [],
-      nbCars: 0,
-      nbCarsAssigne: 0,
-      nbCarsDisponible: 0,
-      isLoading: false,
-      setCars: (cars) => set({ cars }),
-      setLoading: (isLoading) => set({ isLoading }),
-      fetchCars: async () => {
-        set({ isLoading: true });
-        try {
-          const res = await axiosInstance.get<VehiclesResponse>("/vehicles");
-          const cars = res.data?.data ?? []; // fallback to empty array
-          const filteredCars = cars.filter((car) => car.status !== "archived");
-          const nbCars = cars.length;
-          const nbCarsAssigne = cars.filter(
-            (car) => car.assigned_user !== null
-          ).length;
-          const nbCarsDisponible = cars.filter(
-            (car) => car.assigned_user === null
-          ).length;
+export const useCarsStore = create<CarsState>((set, get) => ({
+  cars: [],
+  nbCars: 0,
+  nbCarsAssigne: 0,
+  nbCarsDisponible: 0,
+  isLoading: false,
 
-          set({
-            cars: filteredCars,
-            nbCars,
-            nbCarsAssigne,
-            nbCarsDisponible,
-          });
-        } catch (err) {
-          console.error("fetchCars failed:", err);
-        } finally {
-          set({ isLoading: false });
-        }
-      },
+  setCars: (cars) => set({ cars }),
+  setLoading: (isLoading) => set({ isLoading }),
 
-      createCar: async (car: CreateCar) => {
-        set({ isLoading: true });
-        try {
-          await axiosInstance.post<{ vehicle: Vehicle }>("/vehicles", car);
-          await get().fetchCars();
-        } catch (err) {
-          console.error("createCar failed:", err);
-          throw err; // optional: so you can catch in UI
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-      fetchCar: async (carId: string) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await axiosInstance.get<{ vehicle: Vehicle }>(
-            `/vehicles/${carId}`
-          );
-          return data.vehicle;
-        } catch (err) {
-          console.error("fetchCar failed:", err);
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-      deleteCar: async (carId: string) => {
-        set({ isLoading: true });
-        try {
-          await axiosInstance.delete<{ vehicle: Vehicle }>(
-            `/vehicles/${carId}`
-          );
-          await get().fetchCars();
-        } catch (err) {
-          console.error("fetchCar failed:", err);
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-      editCar: async (carId: string, car: CreateCar) => {
-        set({ isLoading: true });
-        try {
-          await axiosInstance.put(`/vehicles/${carId}`, car);
-          await get().fetchCars();
-        } catch (err) {
-          console.error("fetchCar failed:", err);
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-    }),
-    {
-      name: "cars-storage",
-      storage: createJSONStorage(
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        () => require("@react-native-async-storage/async-storage").default
-      ),
+  fetchCars: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await axiosInstance.get("/vehicles");
+      const cars = res.data?.data ?? res.data?.vehicles ?? [];
+
+      const filteredCars = cars.filter(
+        (car: Vehicle) => car.status !== "archived"
+      );
+
+      const nbCars = filteredCars.length;
+      const nbCarsAssigne = filteredCars.filter(
+        (car: Vehicle) => car.assigned_user !== null
+      ).length;
+      const nbCarsDisponible = filteredCars.filter(
+        (car: Vehicle) => car.assigned_user === null
+      ).length;
+
+      set({
+        cars: filteredCars,
+        nbCars,
+        nbCarsAssigne,
+        nbCarsDisponible,
+      });
+    } catch (err) {
+      console.error("fetchCars failed:", err);
+      set({
+        cars: [],
+        nbCars: 0,
+        nbCarsAssigne: 0,
+        nbCarsDisponible: 0,
+      });
+    } finally {
+      set({ isLoading: false });
     }
-  )
-);
+  },
+
+  createCar: async (car) => {
+    set({ isLoading: true });
+    try {
+      await axiosInstance.post("/vehicles", car);
+      await get().fetchCars();
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchCar: async (carId) => {
+    set({ isLoading: true });
+    try {
+      const { data } = await axiosInstance.get(`/vehicles/${carId}`);
+      return data.vehicle as Vehicle;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  deleteCar: async (carId) => {
+    set({ isLoading: true });
+    try {
+      await axiosInstance.delete(`/vehicles/${carId}`);
+      await get().fetchCars();
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  editCar: async (carId, car) => {
+    set({ isLoading: true });
+    try {
+      await axiosInstance.put(`/vehicles/${carId}`, car);
+      await get().fetchCars();
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+}));

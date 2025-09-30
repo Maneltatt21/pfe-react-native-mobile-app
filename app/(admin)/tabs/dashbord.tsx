@@ -9,6 +9,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -25,30 +26,51 @@ type DrawerParamList = {
 export default function AdminDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { fetchCars, cars, nbCars, nbCarsAssigne, nbCarsDisponible } =
-    useCarsStore();
+  const fetchCars = useCarsStore((state) => state.fetchCars);
+  const cars = useCarsStore((state) => state.cars);
+  const nbCars = useCarsStore((state) => state.nbCars);
+  const nbCarsAssigne = useCarsStore((state) => state.nbCarsAssigne);
+  const nbCarsDisponible = useCarsStore((state) => state.nbCarsDisponible);
+  const isLoading = useCarsStore((state) => state.isLoading);
+
   const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { logout, user } = useAuth();
 
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
   const toggleDropdown = () => setDropdownVisible(!dropdownVisible);
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
-  useEffect(() => {
-    fetchCars();
-  }, [fetchCars]);
 
   const confirmLogout = async () => {
     setShowLogoutModal(false);
     try {
       await logout();
-      router.replace("/");
     } catch (err) {
       console.error("Échec de la déconnexion:", err);
     }
   };
+
+  // Show full screen loading while initial data is loading
+  if (isLoading) {
+    return (
+      <Pressable
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View style={styles.fullScreenLoading}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme.colors.text }]}>
+            Chargement du tableau de bord...
+          </Text>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
@@ -95,7 +117,7 @@ export default function AdminDashboard() {
                 Véhicules Totaux
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-                {nbCars}
+                {nbCars || 0}
               </Text>
             </View>
             <View
@@ -105,7 +127,7 @@ export default function AdminDashboard() {
                 Véhicules Assignés
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-                {nbCarsAssigne}
+                {nbCarsAssigne || 0}
               </Text>
             </View>
             <View
@@ -115,7 +137,7 @@ export default function AdminDashboard() {
                 Véhicules Disponibles
               </Text>
               <Text style={[styles.statNumber, { color: theme.colors.text }]}>
-                {nbCarsDisponible}
+                {nbCarsDisponible || 0}
               </Text>
             </View>
           </View>
@@ -172,27 +194,56 @@ export default function AdminDashboard() {
               <Text
                 style={[styles.tableCellHeader, { color: theme.colors.text }]}
               >
-                #
+                Matricule
+              </Text>
+
+              <Text
+                style={[styles.tableCellHeader, { color: theme.colors.text }]}
+              >
+                Year
               </Text>
               <Text
                 style={[styles.tableCellHeader, { color: theme.colors.text }]}
               >
-                N°
+                Model
               </Text>
               <Text
                 style={[styles.tableCellHeader, { color: theme.colors.text }]}
               >
                 Type
               </Text>
-              <Text
-                style={[styles.tableCellHeader, { color: theme.colors.text }]}
-              >
-                Modèle
-              </Text>
             </View>
 
-            {Array.isArray(cars) && cars.length > 0 ? (
-              cars.map((vehicle, index) => (
+            {isLoading ? (
+              // Show loading state
+              <View
+                style={[
+                  styles.loadingRow,
+                  { backgroundColor: theme.colors.card },
+                ]}
+              >
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text
+                  style={[styles.loadingText, { color: theme.colors.text }]}
+                >
+                  Chargement des véhicules...
+                </Text>
+              </View>
+            ) : !cars || cars.length === 0 ? (
+              // Show empty state when no cars
+              <View
+                style={[
+                  styles.emptyState,
+                  { backgroundColor: theme.colors.card },
+                ]}
+              >
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+                  Aucun véhicule trouvé.
+                </Text>
+              </View>
+            ) : (
+              // Show cars when data is loaded
+              cars.map((vehicle) => (
                 <TouchableOpacity
                   key={vehicle.id}
                   style={[
@@ -216,11 +267,6 @@ export default function AdminDashboard() {
                   <Text
                     style={[styles.tableCell, { color: theme.colors.text }]}
                   >
-                    {vehicle.id}
-                  </Text>
-                  <Text
-                    style={[styles.tableCell, { color: theme.colors.text }]}
-                  >
                     {vehicle.registration_number}
                   </Text>
                   <Text
@@ -233,46 +279,63 @@ export default function AdminDashboard() {
                   >
                     {vehicle.model}
                   </Text>
+                  <Text
+                    style={[styles.tableCell, { color: theme.colors.text }]}
+                  >
+                    {vehicle.type}
+                  </Text>
                 </TouchableOpacity>
               ))
-            ) : (
-              <Text style={{ color: theme.colors.text, padding: 16 }}>
-                Aucun véhicule trouvé.
-              </Text>
             )}
-            <TouchableOpacity
-              onPress={() => router.push("/(admin)/vehicles/add-vehicle")}
-            >
-              <View
-                style={[
-                  styles.tableRowAdd,
-                  {
-                    backgroundColor: theme.colors.createButton,
-                  },
-                ]}
+
+            {/* Add vehicle row - only show when not loading */}
+            {!isLoading && (
+              <TouchableOpacity
+                onPress={() => router.push("/(admin)/vehicles/add-vehicle")}
               >
-                <Text
-                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
+                <View
+                  style={[
+                    styles.tableRowAdd,
+                    {
+                      backgroundColor: theme.colors.createButton,
+                    },
+                  ]}
                 >
-                  +
-                </Text>
-                <Text
-                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
-                >
-                  ---
-                </Text>
-                <Text
-                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
-                >
-                  Ajouter
-                </Text>
-                <Text
-                  style={[styles.tableCell, { color: theme.colors.buttonText }]}
-                >
-                  un véhicule
-                </Text>
-              </View>
-            </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.buttonText },
+                    ]}
+                  >
+                    +
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.buttonText },
+                    ]}
+                  >
+                    ---
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.buttonText },
+                    ]}
+                  >
+                    Ajouter
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      { color: theme.colors.buttonText },
+                    ]}
+                  >
+                    un véhicule
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <ConfirmModal
@@ -311,7 +374,16 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 16, backgroundColor: "transparent" },
+  container: {
+    flex: 1,
+    paddingTop: 16,
+    backgroundColor: "transparent",
+  },
+  fullScreenLoading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   header: {
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -329,7 +401,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     elevation: 2,
   },
-  avatar: { width: 36, height: 36, borderRadius: 18 },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
   adminLabelContainer: {
     marginLeft: 8,
     flexDirection: "row",
@@ -340,7 +416,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginRight: 4,
   },
-  content: { flex: 1, justifyContent: "center", alignItems: "center" },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   dropdown: {
     position: "absolute",
     top: 60,
@@ -446,6 +526,24 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     flex: 1,
+    textAlign: "center",
+  },
+  loadingRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  emptyState: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 16,
     textAlign: "center",
   },
 });

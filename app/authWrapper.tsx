@@ -26,7 +26,7 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({
   }
 
   if (requireAuth && !isAuthenticated) {
-    router.replace("/");
+    router.replace("./index.tsx");
     return null;
   }
 
@@ -38,7 +38,7 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({
   }
 
   if (role && user?.role !== role) {
-    router.replace("/");
+    router.replace("./index.tsx");
     return null;
   }
 

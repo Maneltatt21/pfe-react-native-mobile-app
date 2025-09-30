@@ -1,8 +1,10 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
 import { Driver } from "@/src/models/driver.model";
+import { useCarsStore } from "@/src/store/carsStore";
 import { useDriversStore } from "@/src/store/deriversStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
+import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 
 import React, { useEffect, useState } from "react";
@@ -25,22 +27,29 @@ export default function ChauffeursPage() {
     fetchDrivers,
     deleteDriver,
     updateDriver,
-    createDriver,
+    assigneDriver,
     drivers,
     isLoading,
   } = useDriversStore();
 
+  const { cars, fetchCars } = useCarsStore();
+
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [form, setForm] = useState<{
+    vehicle_id: number | null;
+  }>({
+    vehicle_id: null,
+  });
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     fetchDrivers();
-  }, [fetchDrivers]);
+    fetchCars();
+  }, [fetchDrivers, fetchCars]);
 
   const confirmDelete = (driver: Driver) => {
     setSelectedDriver(driver);
@@ -54,25 +63,30 @@ export default function ChauffeursPage() {
     }
   };
 
-  const openUpdateModal = (driver: Driver) => {
+  const openAssignModal = (driver: Driver) => {
     setSelectedDriver(driver);
-    setName(driver.name);
-    setEmail(driver.email);
+    setForm({
+      vehicle_id: driver.vehicle_id ?? null,
+    });
     setShowUpdateModal(true);
   };
 
   const handleUpdate = async () => {
     if (selectedDriver) {
-      await updateDriver(selectedDriver.id, { name, email });
+      await assigneDriver(selectedDriver.id, form.vehicle_id!);
       setShowUpdateModal(false);
     }
   };
 
-  const handleCreate = async () => {
-    if (!name || !email) return;
-    // await createDriver({ name, email });
-    setShowCreateModal(false);
-  };
+  // const handleCreate = async () => {
+  //   if (!form.name || !form.email) return;
+  //   await createDriver({
+  //     name: form.name,
+  //     email: form.email,
+  //     vehicle_id: form.vehicle_id,
+  //   });
+  //   setShowCreateModal(false);
+  // };
 
   // Filter drivers by search text
   const filteredDrivers = drivers.filter(
@@ -112,13 +126,15 @@ export default function ChauffeursPage() {
         </View>
 
         <TouchableOpacity
-          onPress={() => router.push("/(admin)/drivers/add-driver")}
+          onPress={() => {
+            setForm({ vehicle_id: null });
+            setShowCreateModal(true);
+          }}
           style={[styles.newButton, { backgroundColor: theme.colors.primary }]}
         >
           <Text style={styles.newButtonText}>+ Nouveau</Text>
         </TouchableOpacity>
       </View>
-
       {isLoading ? (
         <Text style={{ color: theme.colors.text, marginTop: 20 }}>
           Chargement...
@@ -162,11 +178,10 @@ export default function ChauffeursPage() {
               <View style={styles.actions}>
                 <TouchableOpacity
                   style={styles.editButton}
-                  onPress={() => openUpdateModal(item)}
+                  onPress={() => openAssignModal(item)}
                 >
-                  <Text style={styles.actionText}>Modifier</Text>
+                  <Text style={styles.actionText}>Assigné</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={styles.deleteButton}
                   onPress={() => confirmDelete(item)}
@@ -179,7 +194,6 @@ export default function ChauffeursPage() {
           contentContainerStyle={{ paddingTop: 10, paddingBottom: 30 }}
         />
       )}
-
       {/* Delete Modal */}
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -209,8 +223,7 @@ export default function ChauffeursPage() {
           </View>
         </View>
       </Modal>
-
-      {/* Update Modal */}
+      {/* Update / Assign Vehicle Modal */}
       <Modal visible={showUpdateModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View
@@ -220,29 +233,32 @@ export default function ChauffeursPage() {
             ]}
           >
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              Modifier le chauffeur
+              Modifier chauffeur / Assigné une voiture
             </Text>
 
-            <TextInput
+            <View
               style={[
                 styles.input,
-                { color: theme.colors.text, borderColor: theme.colors.text },
+                { padding: 0, borderColor: theme.colors.border },
               ]}
-              value={name}
-              onChangeText={setName}
-              placeholder="Nom"
-              placeholderTextColor={theme.colors.text + "88"}
-            />
-            <TextInput
-              style={[
-                styles.input,
-                { color: theme.colors.text, borderColor: theme.colors.text },
-              ]}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
-              placeholderTextColor={theme.colors.text + "88"}
-            />
+            >
+              <Picker
+                selectedValue={form.vehicle_id}
+                onValueChange={(value) =>
+                  setForm({ ...form, vehicle_id: value ? Number(value) : null })
+                }
+                style={{ color: theme.colors.text }}
+              >
+                <Picker.Item label="Choisir un véhicule" value={null} />
+                {cars.map((car) => (
+                  <Picker.Item
+                    key={car.id}
+                    label={`${car.model} (${car.registration_number})`}
+                    value={car.id}
+                  />
+                ))}
+              </Picker>
+            </View>
 
             <View style={styles.modalActions}>
               <Pressable
@@ -253,55 +269,6 @@ export default function ChauffeursPage() {
               </Pressable>
               <Pressable onPress={handleUpdate} style={styles.editButton}>
                 <Text style={styles.modalText}>Enregistrer</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Create Modal */}
-      <Modal visible={showCreateModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: theme.colors.card },
-            ]}
-          >
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              Nouveau chauffeur
-            </Text>
-
-            <TextInput
-              style={[
-                styles.input,
-                { color: theme.colors.text, borderColor: theme.colors.text },
-              ]}
-              value={name}
-              onChangeText={setName}
-              placeholder="Nom"
-              placeholderTextColor={theme.colors.text + "88"}
-            />
-            <TextInput
-              style={[
-                styles.input,
-                { color: theme.colors.text, borderColor: theme.colors.text },
-              ]}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
-              placeholderTextColor={theme.colors.text + "88"}
-            />
-
-            <View style={styles.modalActions}>
-              <Pressable
-                onPress={() => setShowCreateModal(false)}
-                style={styles.modalCancel}
-              >
-                <Text style={styles.modalText}>Annuler</Text>
-              </Pressable>
-              <Pressable onPress={handleCreate} style={styles.createButton}>
-                <Text style={styles.modalText}>Créer</Text>
               </Pressable>
             </View>
           </View>
@@ -325,35 +292,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     elevation: 3,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  email: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  vehicleBlock: {
-    marginTop: 5,
-    marginBottom: 10,
-  },
-  vehicleLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  vehicleDetails: {
-    fontSize: 13,
-  },
-  noVehicle: {
-    fontSize: 13,
-    fontStyle: "italic",
-    marginBottom: 10,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 10,
-  },
+  name: { fontSize: 18, fontWeight: "bold" },
+  email: { fontSize: 14, marginBottom: 8 },
+  vehicleBlock: { marginTop: 5, marginBottom: 10 },
+  vehicleLabel: { fontSize: 14, fontWeight: "600" },
+  vehicleDetails: { fontSize: 13 },
+  noVehicle: { fontSize: 13, fontStyle: "italic", marginBottom: 10 },
+  actions: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
   editButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -372,35 +317,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#28a745",
     borderRadius: 5,
   },
-  actionText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  actionText: { color: "#fff", fontWeight: "600" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
     alignItems: "center",
   },
-  modalContent: {
-    padding: 20,
-    borderRadius: 10,
-    width: "85%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalMessage: {
-    fontSize: 15,
-    marginBottom: 20,
-  },
-  modalActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 10,
-  },
+  modalContent: { padding: 20, borderRadius: 10, width: "85%" },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  modalMessage: { fontSize: 15, marginBottom: 20 },
+  modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10 },
   modalCancel: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -413,10 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#dc3545",
     borderRadius: 5,
   },
-  modalText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  modalText: { color: "#fff", fontWeight: "600" },
   searchContainer: {
     flex: 1,
     flexDirection: "row",
@@ -426,10 +350,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 45,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-  },
+  searchInput: { flex: 1, fontSize: 15 },
   newButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -438,9 +359,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 2,
   },
-  newButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
+  newButtonText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 });

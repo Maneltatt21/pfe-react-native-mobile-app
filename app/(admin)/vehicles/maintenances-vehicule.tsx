@@ -5,7 +5,6 @@ import { useTheme } from "@/src/theme/ThemeProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import axios from "axios";
 import Constants from "expo-constants";
 import * as DocumentPicker from "expo-document-picker";
 import { useLocalSearchParams } from "expo-router";
@@ -28,26 +27,27 @@ export const unstable_settings = { drawer: null };
 
 export default function VehicleMaintenancesPage() {
   const { theme } = useTheme();
-  const { car, fetchCar } = useCarStore();
-  const { carId } = useLocalSearchParams();
+  const { car, fetchCar, createCarMaintenance, isLoading } = useCarStore();
+  const { carId } = useLocalSearchParams<{ carId: string }>();
 
-  /* --- modal & form state ------------------------------------------------- */
   const [visible, setVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [type, setType] = useState("Oil Change");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [reminder, setReminder] = useState("");
-  const [minReminder, setMinReminder] = useState<Date | null>(null);
   const [invoice, setInvoice] =
     useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [showDate, setShowDate] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  const [minReminder, setMinReminder] = useState<Date | null>(null);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
 
+  // Fetch car on mount
   useEffect(() => {
-    fetchCar(Number(carId[0]));
-  }, [carId, fetchCar]);
-  /* --- pick invoice file -------------------------------------------------- */
+    fetchCar(Number(carId));
+  }, [carId]);
+
+  // Pick invoice file
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({
       type: ["application/pdf", "image/*"],
@@ -55,69 +55,65 @@ export default function VehicleMaintenancesPage() {
     if (!res.canceled) setInvoice(res.assets[0]);
   };
 
-  /* --- submit ------------------------------------------------------------- */
+  // Submit maintenance
   const onSubmit = async () => {
     if (!type || !description || !date || !reminder || !invoice) {
       console.log("All fields are required");
       return;
     }
-    // Get the stored auth data
+
     const authStorage = await AsyncStorage.getItem("auth-storage");
-    if (!authStorage) {
-      console.log("No auth data found");
-      return;
-    }
+    if (!authStorage) return console.log("No auth data found");
 
     const parsedAuth = JSON.parse(authStorage);
-    const token = parsedAuth.state?.token; // extract token
-    if (!token) {
-      console.log("No token found in auth storage");
-      return;
-    }
-    const form = new FormData();
-    form.append("maintenance_type", type);
-    form.append("description", description);
-    form.append("date", date);
-    form.append("reminder_date", reminder);
-    form.append("invoice", {
+    const token = parsedAuth.state?.token;
+    if (!token) return console.log("No token found");
+
+    const formData = new FormData();
+    formData.append("maintenance_type", type);
+    formData.append("description", description);
+    formData.append("date", date);
+    formData.append("reminder_date", reminder);
+    formData.append("invoice", {
       uri: invoice.uri,
       type: mime.lookup(invoice.name) || "application/octet-stream",
       name: invoice.name,
     } as any);
 
-    setLoading(true);
-    console.log(form);
     try {
-      // const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
-      console.log("car id :", carId);
-      const res = await axios.post(
-        `${Constants.expoConfig?.extra?.BASE_URL}/vehicles/${carId}/maintenances`,
-        form,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log("data:", JSON.stringify(res, null, 2));
-      await fetchCar(car!.id);
-      setVisible(false);
+      setLoadingSubmit(true);
+      await createCarMaintenance(Number(carId), formData);
+
+      // Reset form
+      setType("Oil Change");
       setDescription("");
       setDate("");
       setReminder("");
       setInvoice(null);
-    } catch (e) {
-      console.error(e);
+      setVisible(false);
+    } catch (err) {
+      console.error("Failed to add maintenance:", err);
     } finally {
-      setLoading(false);
+      setLoadingSubmit(false);
     }
   };
+
+  if (isLoading || !car) {
+    return (
+      <Container>
+        <BackHeader title="Maintenances" />
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </Container>
+    );
+  }
 
   return (
     <Container>
       <BackHeader title="Maintenances" />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
@@ -126,7 +122,6 @@ export default function VehicleMaintenancesPage() {
       >
         <View style={styles.content}>
           <View style={[styles.table, { backgroundColor: theme.colors.card }]}>
-            {/* header */}
             <View
               style={[
                 styles.tableRowHeader,
@@ -151,13 +146,8 @@ export default function VehicleMaintenancesPage() {
               )}
             </View>
 
-            {/* rows */}
-            {car!.maintenances?.length ? (
-              <Text style={{ color: theme.colors.text, padding: 16 }}>
-                Aucun entretien disponible.
-              </Text>
-            ) : (
-              car!.maintenances.map((m) => (
+            {car.maintenances.length > 0 ? (
+              car.maintenances.map((m) => (
                 <View
                   key={m.id}
                   style={[
@@ -207,9 +197,7 @@ export default function VehicleMaintenancesPage() {
                       if (m.invoice_path) {
                         Linking.openURL(
                           `${Constants.expoConfig?.extra?.APP_STORAGE_URL}/${m.invoice_path}`
-                        ).catch((err) =>
-                          console.error("Failed to open file:", err)
-                        );
+                        ).catch(console.error);
                       }
                     }}
                   >
@@ -217,6 +205,10 @@ export default function VehicleMaintenancesPage() {
                   </Text>
                 </View>
               ))
+            ) : (
+              <Text style={{ padding: 12, color: theme.colors.text }}>
+                No maintenances found
+              </Text>
             )}
           </View>
 
@@ -234,7 +226,7 @@ export default function VehicleMaintenancesPage() {
         </View>
       </ScrollView>
 
-      {/* ------------- Modal ------------- */}
+      {/* Modal */}
       <Modal visible={visible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View
@@ -248,7 +240,7 @@ export default function VehicleMaintenancesPage() {
             </Text>
 
             <Picker
-              style={[{ color: theme.colors.text }]}
+              style={{ color: theme.colors.text }}
               selectedValue={type}
               onValueChange={setType}
             >
@@ -256,6 +248,7 @@ export default function VehicleMaintenancesPage() {
               <Picker.Item label="Tire Rotation" value="Tire Rotation" />
               <Picker.Item label="Brake Service" value="Brake Service" />
             </Picker>
+
             <TextInput
               placeholder="Description"
               placeholderTextColor={theme.colors.text}
@@ -266,7 +259,7 @@ export default function VehicleMaintenancesPage() {
                 { color: theme.colors.text, borderColor: theme.colors.border },
               ]}
             />
-            {/* ------------- DATE ------------- */}
+
             <TouchableOpacity
               onPress={() => setShowDate(true)}
               style={styles.fakeInput}
@@ -284,22 +277,20 @@ export default function VehicleMaintenancesPage() {
                 value={date ? new Date(date) : new Date()}
                 mode="date"
                 display="default"
-                minimumDate={new Date()} // today
+                minimumDate={new Date()}
                 onChange={(_, d) => {
                   setShowDate(false);
                   if (d) {
-                    const iso = d.toISOString().split("T")[0];
-                    setDate(iso);
-                    setReminder(""); // reset reminder when date changes
-                    setMinReminder(d); // reminder ≥ this date
+                    setDate(d.toISOString().split("T")[0]);
+                    setReminder("");
+                    setMinReminder(d);
                   }
                 }}
               />
             )}
 
-            {/* ------------- REMINDER ------------- */}
             <TouchableOpacity
-              onPress={() => date && setShowReminder(true)} // only open if date chosen
+              onPress={() => date && setShowReminder(true)}
               style={[styles.fakeInput, !date && { opacity: 0.5 }]}
               disabled={!date}
             >
@@ -313,24 +304,27 @@ export default function VehicleMaintenancesPage() {
                   : "Choisissez d’abord une date"}
               </Text>
             </TouchableOpacity>
-            {showReminder &&
-              date &&
-              (() => {
-                const nextDay = new Date(date);
-                nextDay.setDate(nextDay.getDate() + 1);
-                return (
-                  <DateTimePicker
-                    value={reminder ? new Date(reminder) : nextDay}
-                    mode="date"
-                    display="default"
-                    minimumDate={nextDay}
-                    onChange={(_, r) => {
-                      setShowReminder(false);
-                      if (r) setReminder(r.toISOString().split("T")[0]);
-                    }}
-                  />
-                );
-              })()}
+            {showReminder && date && (
+              <DateTimePicker
+                value={
+                  reminder
+                    ? new Date(reminder)
+                    : new Date(
+                        new Date(date).setDate(new Date(date).getDate() + 1)
+                      )
+                }
+                mode="date"
+                display="default"
+                minimumDate={
+                  new Date(new Date(date).setDate(new Date(date).getDate() + 1))
+                }
+                onChange={(_, r) => {
+                  setShowReminder(false);
+                  if (r) setReminder(r.toISOString().split("T")[0]);
+                }}
+              />
+            )}
+
             <TouchableOpacity onPress={pickFile} style={styles.fakeInput}>
               <Text
                 style={[styles.fakeInputText, { color: theme.colors.text }]}
@@ -350,7 +344,7 @@ export default function VehicleMaintenancesPage() {
                   setVisible(false);
                 }}
               />
-              {loading ? (
+              {loadingSubmit ? (
                 <ActivityIndicator size="small" color={theme.colors.primary} />
               ) : (
                 <Button
@@ -398,11 +392,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  modalContent: {
-    width: "90%",
-    borderRadius: 12,
-    padding: 20,
-  },
+  modalContent: { width: "90%", borderRadius: 12, padding: 20 },
   modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 12 },
   fakeInput: {
     borderWidth: 1,

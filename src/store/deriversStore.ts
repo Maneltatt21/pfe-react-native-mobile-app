@@ -14,6 +14,7 @@ interface DriversState {
   createDriver: () => Promise<void>;
   deleteDriver: (driverId: number) => Promise<void>;
   updateDriver: (driverId: number, data: Partial<Driver>) => Promise<void>;
+  assigneDriver: (driverId: number, vehicleId: number) => Promise<void>;
 }
 
 export const useDriversStore = create<DriversState>()(
@@ -67,6 +68,19 @@ export const useDriversStore = create<DriversState>()(
           await get().fetchDrivers(); // Refresh the list after update
         } catch (err) {
           console.error("updateDriver failed:", err);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+      assigneDriver: async (driverId: number, vehicle_id: number) => {
+        set({ isLoading: true });
+        try {
+          await axiosInstance.post(`/users/${driverId}/assign-vehicle`, {
+            vehicle_id: vehicle_id,
+          });
+          await get().fetchDrivers();
+        } catch (err) {
+          console.error("assign Driver failed:", err);
         } finally {
           set({ isLoading: false });
         }

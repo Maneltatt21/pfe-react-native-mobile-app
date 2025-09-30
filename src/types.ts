@@ -65,6 +65,7 @@ export interface Vehicle {
   registration_number: string;
   model: string;
   year: number;
+  type: "sec" | "frigo";
   status: "active" | "archived";
   archived_at: string | null;
   created_at: string;
@@ -82,6 +83,12 @@ export interface CreateCar {
   year: number;
   status?: "active" | "archived";
   assigned_user_id?: number | null;
+}
+
+export interface EditCar {
+  registration_number: string;
+  model: string;
+  year: number;
 }
 
 // CreateCarDocument interface
@@ -114,6 +121,7 @@ export const defaultVehicle: Vehicle = {
   model: "",
   year: 0,
   status: "active",
+  type: "sec",
   archived_at: null,
   created_at: "",
   updated_at: "",

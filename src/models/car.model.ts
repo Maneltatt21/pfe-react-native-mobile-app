@@ -1,4 +1,3 @@
-// Vehicle document (assurance, carte grise, …)
 export interface VehicleDocument {
   id: number;
   vehicle_id: number;
@@ -8,12 +7,15 @@ export interface VehicleDocument {
   created_at: string;
   updated_at: string;
 }
+
 // models/create-car.model.ts
 export interface CreateCar {
   registration_number: string;
   model: string;
   year: number;
+  type: string;
 }
+
 // Chauffeur assigned to a vehicle
 export interface AssignedUser {
   id: number;
@@ -33,6 +35,7 @@ export interface Vehicle {
   model: string;
   year: number;
   status: "active" | "archived";
+  type: "sec" | "frigo";
   archived_at: string | null;
   created_at: string;
   updated_at: string;
@@ -60,4 +63,19 @@ export interface VehiclesResponse {
   prev_page_url: string | null;
   to: number;
   total: number;
+}
+
+// Error entry for store
+export interface ErrorEntry {
+  message: string;
+  operation: string;
+  timestamp: string;
+  code?: number;
+}
+
+// API response wrapper
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  status: string;
 }

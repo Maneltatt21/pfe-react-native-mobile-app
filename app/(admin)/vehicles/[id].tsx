@@ -1,6 +1,6 @@
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
-import { CreateCar } from "@/src/models/car.model";
+import { useCarsStore } from "@/src/store/carsStore";
 import { useCarStore } from "@/src/store/carStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Picker } from "@react-native-picker/picker";
@@ -18,24 +18,20 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons"; // or Ionicons / Feather etc.
+import Icon from "react-native-vector-icons/MaterialIcons";
 
-export const unstable_settings = {
-  drawer: null,
-};
+export const unstable_settings = { drawer: null };
 
 export default function VehicleDetailPage() {
   const { id } = useLocalSearchParams();
-
   const { theme } = useTheme();
   const { car, errors, isLoading, fetchCar, deleteCar, editCar, clearErrors } =
     useCarStore();
   const router = useRouter();
-
+  const fetchCars = useCarsStore((state) => state.fetchCars);
   const [editVisible, setEditVisible] = useState(false);
-  const [editModel, setEditModel] = useState("");
   const [editYear, setEditYear] = useState(new Date().getFullYear().toString());
-  const [editRegistration, setEditRegistration] = useState("");
+  const [editModel, setEditModel] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   const years = Array.from({ length: 20 }, (_, i) =>
@@ -43,7 +39,7 @@ export default function VehicleDetailPage() {
   );
 
   useEffect(() => {
-    fetchCar(Number(id));
+    if (id) fetchCar(Number(id));
   }, [fetchCar, id]);
 
   const confirmDelete = () => {
@@ -59,7 +55,7 @@ export default function VehicleDetailPage() {
 
   const handleDelete = async () => {
     try {
-      await deleteCar(car!.id.toString());
+      await deleteCar(car!.id);
       Alert.alert("Succès", "Véhicule supprimé avec succès.");
       router.back();
     } catch (error) {
@@ -69,42 +65,37 @@ export default function VehicleDetailPage() {
   };
 
   const openEditModal = () => {
-    setEditModel(car!.model);
     setEditYear(car!.year.toString());
-    setEditRegistration(car!.registration_number);
+    setEditModel(car!.model);
     setEditVisible(true);
   };
 
   const handleSaveEdit = async () => {
     setIsEditing(true);
-    const updatedCar: CreateCar = {
-      model: editModel,
-      year: parseInt(editYear, 10),
-      registration_number: editRegistration,
-    };
-
     try {
-      await editCar(id[0], updatedCar);
+      await editCar(Number(id), {
+        year: parseInt(editYear, 10),
+        model: editModel,
+        registration_number: car?.registration_number!,
+      });
       setEditVisible(false);
     } catch (err) {
       Alert.alert("Erreur", "La mise à jour du véhicule a échoué.");
     } finally {
       setIsEditing(false);
+      await fetchCars();
     }
   };
 
-  if (!id) {
-    // Defensive fallback in case id is missing
-    return <Text>ID du véhicule invalide</Text>;
-  }
-  if (isLoading) {
+  if (!id) return <Text>ID du véhicule invalide</Text>;
+  if (isLoading || !car)
     return (
       <Container>
         <BackHeader title="" />
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </Container>
     );
-  }
+
   return (
     <Container>
       <ScrollView
@@ -116,25 +107,24 @@ export default function VehicleDetailPage() {
           style={[styles.detailBox, { backgroundColor: theme.colors.card }]}
         >
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            ID : <Text style={styles.value}>{car!.id}</Text>
-          </Text>
-          <Text style={[styles.label, { color: theme.colors.text }]}>
             Modèle : <Text style={styles.value}>{car!.model}</Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
             Année : <Text style={styles.value}>{car!.year}</Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Statut :
+            Statut :{" "}
             <Text style={styles.value}>
               {car!.status === "active" ? "Disponible" : "Indisponible"}
             </Text>
           </Text>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            Numéro d&apos;immatriculation :
+            Numéro d&apos;immatriculation :{" "}
             <Text style={styles.value}>{car!.registration_number}</Text>
           </Text>
-
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Type : <Text style={styles.value}>{car!.type}</Text>
+          </Text>
           {car!.assigned_user ? (
             <>
               <View
@@ -151,7 +141,7 @@ export default function VehicleDetailPage() {
                 <Text style={styles.value}>{car!.assigned_user.name}</Text>
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
-                E-mail :
+                E-mail :{" "}
                 <Text style={styles.value}>{car!.assigned_user.email}</Text>
               </Text>
               <Text style={[styles.label, { color: theme.colors.text }]}>
@@ -180,14 +170,10 @@ export default function VehicleDetailPage() {
           onPress={() =>
             router.navigate({
               pathname: "/vehicles/documents-vehicule",
-              params: { carId: car!.id }, // pass the car ID
+              params: { carId: car!.id },
             })
           }
-          style={({ pressed }) => [
-            styles.row,
-            { backgroundColor: theme.colors.card },
-            // pressed && styles.pressed,
-          ]}
+          style={[styles.row, { backgroundColor: theme.colors.card }]}
         >
           <Text style={{ color: theme.colors.text }}>Documents</Text>
           <Icon name="chevron-right" size={24} color="#666" />
@@ -197,18 +183,15 @@ export default function VehicleDetailPage() {
           onPress={() =>
             router.navigate({
               pathname: "/vehicles/maintenances-vehicule",
-              params: { carId: car!.id }, // pass the car ID
+              params: { carId: car!.id },
             })
           }
-          style={({ pressed }) => [
-            styles.row,
-            { backgroundColor: theme.colors.card },
-            // pressed && styles.pressed,
-          ]}
+          style={[styles.row, { backgroundColor: theme.colors.card }]}
         >
           <Text style={{ color: theme.colors.text }}>Maintenances</Text>
           <Icon name="chevron-right" size={24} color="#666" />
         </Pressable>
+
         {errors.length > 0 && (
           <View
             style={[
@@ -224,13 +207,15 @@ export default function VehicleDetailPage() {
                 key={index}
                 style={[styles.label, { color: theme.colors.error || "red" }]}
               >
-                [{new Date(error.timestamp).toLocaleString()}] {error.operation}
-                :{error.message}
+                [{new Date(error.timestamp).toLocaleString()}] {error.operation}{" "}
+                : {error.message}
               </Text>
             ))}
             <Button title="Effacer les erreurs" onPress={clearErrors} />
           </View>
         )}
+
+        {/* Edit Modal */}
         <Modal visible={editVisible} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View
@@ -240,6 +225,7 @@ export default function VehicleDetailPage() {
                 Modifier le véhicule
               </Text>
 
+              {/* Model Input */}
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 value={editModel}
@@ -248,6 +234,7 @@ export default function VehicleDetailPage() {
                 placeholderTextColor="#aaa"
               />
 
+              {/* Year Picker */}
               <Text style={{ color: theme.colors.text, marginBottom: 6 }}>
                 Année
               </Text>
@@ -262,14 +249,6 @@ export default function VehicleDetailPage() {
                   ))}
                 </Picker>
               </View>
-
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                value={editRegistration}
-                onChangeText={setEditRegistration}
-                placeholder="Numéro d'immatriculation"
-                placeholderTextColor="#aaa"
-              />
 
               <View style={styles.modalActions}>
                 <Button title="Annuler" onPress={() => setEditVisible(false)} />
@@ -292,29 +271,11 @@ export default function VehicleDetailPage() {
 }
 
 const styles = StyleSheet.create({
-  detailBox: {
-    padding: 16,
-    borderRadius: 12,
-    elevation: 2,
-    marginTop: 20,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  value: {
-    fontWeight: "bold",
-    color: "#1e88e5",
-  },
-  separator: {
-    borderBottomWidth: 1,
-    marginVertical: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
+  detailBox: { padding: 16, borderRadius: 12, elevation: 2, marginTop: 20 },
+  label: { fontSize: 16, marginBottom: 10 },
+  value: { fontWeight: "bold", color: "#1e88e5" },
+  separator: { borderBottomWidth: 1, marginVertical: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 10 },
   actionButtons: {
     marginTop: 20,
     flexDirection: "row",
@@ -327,15 +288,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-  modalBox: {
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
+  modalBox: { borderRadius: 10, padding: 20 },
+  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
   input: {
     borderBottomWidth: 1,
     borderColor: "#ccc",
@@ -360,37 +314,8 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginTop: 20,
   },
-  tableHeader: {
-    flexDirection: "row",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  tableHeaderText: {
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "left",
-  },
-  tableRow: {
-    flexDirection: "row",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  tableCell: {
-    fontSize: 14,
-    textAlign: "left",
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: 20, // Ensure content doesn't get cut off at the bottom
-  },
+  scrollView: { flex: 1 },
+  contentContainer: { paddingBottom: 20 },
   row: {
     borderRadius: 12,
     flexDirection: "row",
@@ -400,8 +325,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  pressed: {
-    backgroundColor: "#f2f2f2",
   },
 });

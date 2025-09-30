@@ -1,89 +1,85 @@
 // import AsyncStorage from "@react-native-async-storage/async-storage";
-// import axios from "axios";
+// import axios, { InternalAxiosRequestConfig } from "axios";
 // import Constants from "expo-constants";
 
-// // Base URL for your Laravel API
+// const BASE_URL = `${Constants.expoConfig?.extra?.BASE_URL}`;
 
-// const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
-
-// // Create axios instance
 // const axiosInstance = axios.create({
 //   baseURL: BASE_URL,
-//   timeout: 10000,
-//   headers: {
-//     "Content-Type": "application/json",
-//     Accept: "application/json",
-//   },
+//   timeout: 30000,
 // });
 
-// // Request interceptor to add auth token
+// /* ------------------------------------------------------------------ */
+// /*  Request interceptor                                                 */
+// /* ------------------------------------------------------------------ */
 // axiosInstance.interceptors.request.use(
-//   async (config) => {
+//   async (config: InternalAxiosRequestConfig) => {
+//     /* 1. Token */
 //     try {
 //       const stored = await AsyncStorage.getItem("auth-storage");
+//       console.log("auth-storage", stored);
 //       if (stored) {
 //         const { state } = JSON.parse(stored);
 //         const token = state?.token;
 //         if (token) {
-//           config.headers.Authorization = `Bearer ${token}`;
+//           config.headers = config.headers ?? {};
+//           config.headers["Authorization"] = `Bearer ${token}`;
 //         }
 //       }
-//     } catch (error) {
-//       console.error("Error getting auth token:", error);
+//     } catch (e) {
+//       console.error("Auth token error:", e);
 //     }
+
+//     /* 2. Content-Type */
+//     // If body is FormData → let browser set multipart header
+//     if (config.data instanceof FormData) {
+//       // Axios on React-Native sets the correct boundary automatically
+//       delete config.headers["Content-Type"];
+//     } else if (typeof config.data === "object") {
+//       // Default to JSON for all other objects
+//       config.headers["Content-Type"] = "application/json";
+//     }
+
 //     return config;
 //   },
 //   (error) => Promise.reject(error)
 // );
 
-// // Response interceptor to handle errors
+// /* ------------------------------------------------------------------ */
+// /*  Response interceptor (unchanged)                                    */
+// /* ------------------------------------------------------------------ */
 // axiosInstance.interceptors.response.use(
-//   (response) => {
-//     return response;
-//   },
+//   (response) => response,
 //   async (error) => {
 //     if (error.response?.status === 401) {
-//       // Token expired or invalid
 //       await AsyncStorage.removeItem("authToken");
 //       await AsyncStorage.removeItem("user");
-//       // Navigate to login screen
-//       // You can use navigation service here
 //     }
 //     return Promise.reject(error);
 //   }
 // );
 
 // export default axiosInstance;
-// axiosInstance.ts
+// api/axiosInstance.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import Constants from "expo-constants";
 
-const BASE_URL = `http://${Constants.expoConfig?.extra?.APP_IP_EMULATOR_DEVICE}:8000/api/v1`;
+const BASE_URL = `${Constants.expoConfig?.extra?.BASE_URL}`;
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000,
-  headers: {
-    Accept: "application/json",
-    // NEVER set a default Content-Type here – we’ll decide per request
-  },
+  timeout: 60000, // Increased timeout for file uploads
 });
 
-/* ------------------------------------------------------------------ */
-/*  Request interceptor                                                 */
-/* ------------------------------------------------------------------ */
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    /* 1. Token */
     try {
       const stored = await AsyncStorage.getItem("auth-storage");
-      console.log("auth-storage", stored);
       if (stored) {
         const { state } = JSON.parse(stored);
         const token = state?.token;
         if (token) {
-          config.headers = config.headers ?? {};
           config.headers["Authorization"] = `Bearer ${token}`;
         }
       }
@@ -91,32 +87,79 @@ axiosInstance.interceptors.request.use(
       console.error("Auth token error:", e);
     }
 
-    /* 2. Content-Type */
-    // If body is FormData → let browser set multipart header
+    // Detailed request logging
+    console.log("🚀 AXIOS REQUEST:", {
+      url: `${config.baseURL}${config.url}`,
+      method: config.method?.toUpperCase(),
+      headers: config.headers,
+      dataType:
+        config.data instanceof FormData ? "FormData" : typeof config.data,
+      hasData: !!config.data,
+      timeout: config.timeout,
+    });
+
+    // Log FormData content in detail
     if (config.data instanceof FormData) {
-      // Axios on React-Native sets the correct boundary automatically
-      delete config.headers["Content-Type"];
-    } else if (typeof config.data === "object") {
-      // Default to JSON for all other objects
-      config.headers["Content-Type"] = "application/json";
+      console.log("📁 FORM_DATA_CONTENTS:");
+      const entries: any[] = [];
+      config.data.forEach((value, key) => {
+        entries.push({ key, value });
+        console.log(`  ${key}:`, value);
+      });
+      console.log("📁 FORM_DATA_ENTRIES:", entries);
     }
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("❌ REQUEST INTERCEPTOR ERROR:", error);
+    return Promise.reject(error);
+  }
 );
 
-/* ------------------------------------------------------------------ */
-/*  Response interceptor (unchanged)                                    */
-/* ------------------------------------------------------------------ */
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("✅ AXIOS RESPONSE SUCCESS:", {
+      url: response.config.url,
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+    });
+    return response;
+  },
   async (error) => {
+    console.error("❌ AXIOS RESPONSE ERROR:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL,
+        headers: error.config?.headers,
+      },
+      response: error.response
+        ? {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data,
+            headers: error.response.headers,
+          }
+        : "NO_RESPONSE",
+      request: error.request
+        ? {
+            status: error.request.status,
+            responseURL: error.request.responseURL,
+            readyState: error.request.readyState,
+          }
+        : "NO_REQUEST",
+    });
+
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem("authToken");
-      await AsyncStorage.removeItem("user");
-      // e.g. RootNavigation.navigate("Login");
+      await AsyncStorage.multiRemove(["auth-storage", "authToken", "user"]);
     }
+
     return Promise.reject(error);
   }
 );

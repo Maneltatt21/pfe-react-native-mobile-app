@@ -1,9 +1,9 @@
 import { useAuth } from "@/app/components/authProvider";
 import BackHeader from "@/app/components/back-botton";
 import Container from "@/app/components/container";
+import { useDriversStore } from "@/src/store/deriversStore";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -14,12 +14,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StatusBar,
+  Alert,
 } from "react-native";
 
 export default function AddDriver() {
-  // const router = useRouter();
   const { theme } = useTheme();
   const { register, isLoading: authLoading } = useAuth();
+  const fetchDrivers = useDriversStore((state) => state.fetchDrivers);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -106,13 +108,28 @@ export default function AddDriver() {
         formData.role
       );
 
-      if (!success) {
+      if (success) {
+        // ✅ Notify user on success
+        Alert.alert("Succès", "Le chauffeur a été créé avec succès !", [
+          { text: "OK" },
+        ]);
+
+        // Optionally reset the form
+        setFormData({
+          fullName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          role: "chauffeur",
+        });
+      } else {
         setError("User already exists");
       }
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
+      await fetchDrivers();
     }
   };
 
@@ -123,7 +140,7 @@ export default function AddDriver() {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         behavior={Platform.OS === "android" ? "padding" : "height"}
       >
-        <StatusBar style="dark" translucent />
+        <StatusBar translucent />
         <ScrollView
           contentContainerStyle={[
             styles.scrollContainer,
@@ -132,6 +149,7 @@ export default function AddDriver() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={[styles.form, { backgroundColor: theme.colors.card }]}>
+            {/* Full Name */}
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
                 Nom complet
@@ -164,6 +182,7 @@ export default function AddDriver() {
               </View>
             </View>
 
+            {/* Email */}
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
                 Email
@@ -197,6 +216,7 @@ export default function AddDriver() {
               </View>
             </View>
 
+            {/* Password */}
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
                 Mot de passe
@@ -240,6 +260,7 @@ export default function AddDriver() {
               </View>
             </View>
 
+            {/* Confirm Password */}
             <View style={styles.inputContainer}>
               <Text style={[styles.label, { color: theme.colors.text }]}>
                 Confirmer le mot de passe
@@ -286,6 +307,8 @@ export default function AddDriver() {
                 </TouchableOpacity>
               </View>
             </View>
+
+            {/* Error */}
             {error && (
               <View
                 style={[
@@ -314,6 +337,7 @@ export default function AddDriver() {
               </View>
             )}
 
+            {/* Signup Button */}
             <TouchableOpacity
               style={[
                 styles.signupButton,
@@ -342,24 +366,8 @@ export default function AddDriver() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
+  container: { flex: 1 },
+  scrollContainer: { flexGrow: 1 },
   form: {
     borderRadius: 12,
     padding: 24,
@@ -369,51 +377,17 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
+  inputContainer: { marginBottom: 20 },
+  label: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderRadius: 8,
   },
-  inputIcon: {
-    marginLeft: 12,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    paddingHorizontal: 12,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 12,
-  },
-  roleSelection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  roleOption: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderRadius: 8,
-    padding: 16,
-  },
-  roleOptionText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: "500",
-  },
+  inputIcon: { marginLeft: 12 },
+  input: { flex: 1, height: 48, paddingHorizontal: 12, fontSize: 16 },
+  eyeIcon: { padding: 12 },
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -422,14 +396,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 4,
   },
-  errorIcon: {
-    marginRight: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    flex: 1,
-    textAlign: "center",
-  },
+  errorIcon: { marginRight: 8 },
+  errorText: { fontSize: 14, flex: 1, textAlign: "center" },
   signupButton: {
     borderRadius: 8,
     height: 48,
@@ -437,18 +405,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  signupButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  footer: {
-    alignItems: "center",
-    marginTop: 24,
-  },
-  footerText: {
-    fontSize: 14,
-  },
-  signinLink: {
-    fontWeight: "600",
-  },
+  signupButtonText: { fontSize: 16, fontWeight: "600" },
 });

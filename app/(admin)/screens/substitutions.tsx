@@ -12,12 +12,15 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
   useWindowDimensions,
+  View,
 } from "react-native";
 import { SceneMap, TabBar, TabView } from "react-native-tab-view";
 
-const ExchangesScreen = () => {
+// Define Route type
+type Route = { key: string; title: string };
+
+const ExchangesScreen: React.FC = () => {
   const { theme } = useTheme();
   const {
     exchanges,
@@ -25,16 +28,15 @@ const ExchangesScreen = () => {
     fetchExchanges,
     approveExchange,
     rejectExchange,
-    nbExchangesPending,
-    nbExchangesApproved,
-    nbExchangesRejected,
   } = useExchangesStore();
+
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: "pending", title: `En attente (${nbExchangesPending})` },
-    { key: "approved", title: `Approuvés (${nbExchangesApproved})` },
-    { key: "rejected", title: `Rejetés (${nbExchangesRejected})` },
+
+  const [routes] = useState<Route[]>([
+    { key: "pending", title: `En attente` },
+    { key: "approved", title: `Approuvés` },
+    { key: "rejected", title: `Rejetés` },
   ]);
 
   useEffect(() => {
@@ -44,15 +46,13 @@ const ExchangesScreen = () => {
   const renderExchangeCard = (exchange: Exchange) => (
     <View
       key={exchange.id}
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.card,
-          borderColor: theme.colors.border,
-        },
-      ]}
+      style={{
+        ...styles.card,
+        backgroundColor: theme.colors.card,
+        borderColor: theme.colors.border,
+      }}
     >
-      <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+      <Text style={{ ...styles.cardTitle, color: theme.colors.text }}>
         Échange #{exchange.id}
       </Text>
       <Text style={{ color: theme.colors.text }}>
@@ -67,7 +67,7 @@ const ExchangesScreen = () => {
       </Text>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.sectionTitle, color: theme.colors.text }}>
           Véhicule
         </Text>
         <Text style={{ color: theme.colors.text }}>
@@ -77,7 +77,7 @@ const ExchangesScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.sectionTitle, color: theme.colors.text }}>
           De conducteur
         </Text>
         <Text style={{ color: theme.colors.text }}>
@@ -86,7 +86,7 @@ const ExchangesScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.sectionTitle, color: theme.colors.text }}>
           À conducteur
         </Text>
         <Text style={{ color: theme.colors.text }}>
@@ -95,7 +95,7 @@ const ExchangesScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.sectionTitle, color: theme.colors.text }}>
           Photo avant
         </Text>
         <Image
@@ -110,7 +110,7 @@ const ExchangesScreen = () => {
       {exchange.status === "pending" && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.colors.success }]}
+            style={{ ...styles.button, backgroundColor: theme.colors.success }}
             onPress={async () => {
               try {
                 await approveExchange(exchange.id.toString());
@@ -122,7 +122,7 @@ const ExchangesScreen = () => {
             <Text style={styles.buttonText}>Approuver</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.colors.error }]}
+            style={{ ...styles.button, backgroundColor: theme.colors.error }}
             onPress={async () => {
               try {
                 await rejectExchange(exchange.id.toString());
@@ -141,7 +141,7 @@ const ExchangesScreen = () => {
   const PendingRoute = () => (
     <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
       {exchanges.filter((e) => e.status === "pending").length === 0 ? (
-        <Text style={[styles.noData, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.noData, color: theme.colors.text }}>
           Aucun échange en attente disponible.
         </Text>
       ) : (
@@ -155,7 +155,7 @@ const ExchangesScreen = () => {
   const ApprovedRoute = () => (
     <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
       {exchanges.filter((e) => e.status === "approved").length === 0 ? (
-        <Text style={[styles.noData, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.noData, color: theme.colors.text }}>
           Aucun échange approuvé disponible.
         </Text>
       ) : (
@@ -169,7 +169,7 @@ const ExchangesScreen = () => {
   const RejectedRoute = () => (
     <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
       {exchanges.filter((e) => e.status === "rejected").length === 0 ? (
-        <Text style={[styles.noData, { color: theme.colors.text }]}>
+        <Text style={{ ...styles.noData, color: theme.colors.text }}>
           Aucun échange rejeté disponible.
         </Text>
       ) : (
@@ -180,6 +180,12 @@ const ExchangesScreen = () => {
     </ScrollView>
   );
 
+  const renderScene = SceneMap({
+    pending: PendingRoute,
+    approved: ApprovedRoute,
+    rejected: RejectedRoute,
+  });
+
   return (
     <Container>
       <BackHeader title="Échanges" />
@@ -188,18 +194,34 @@ const ExchangesScreen = () => {
       ) : (
         <TabView
           navigationState={{ index, routes }}
-          renderScene={SceneMap({
-            pending: PendingRoute,
-            approved: ApprovedRoute,
-            rejected: RejectedRoute,
-          })}
+          renderScene={renderScene}
           onIndexChange={setIndex}
           initialLayout={{ width: layout.width }}
-          renderTabBar={(props) => (
+          renderTabBar={(
+            props: any // cast to any to satisfy TS
+          ) => (
             <TabBar
               {...props}
               style={{ backgroundColor: theme.colors.background }}
               indicatorStyle={{ backgroundColor: theme.colors.primary }}
+              renderLabel={({
+                route,
+                focused,
+              }: {
+                route: Route;
+                focused: boolean;
+              }) => (
+                <Text
+                  style={{
+                    color: focused ? theme.colors.primary : theme.colors.text, // ensure contrast
+                    fontWeight: "bold",
+                  }}
+                >
+                  {route.title}
+                </Text>
+              )}
+              inactiveColor={theme.colors.text} // explicitly set inactive tab color
+              activeColor={theme.colors.primary} // explicitly set active tab color
             />
           )}
         />
@@ -211,11 +233,6 @@ const ExchangesScreen = () => {
 export default ExchangesScreen;
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   noData: {
     fontSize: 16,
     textAlign: "center",
@@ -230,6 +247,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
+    borderWidth: 1,
   },
   cardTitle: {
     fontSize: 18,

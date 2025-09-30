@@ -2,7 +2,7 @@ import { ROUTES } from "@/src/config/routes";
 import { useTheme } from "@/src/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -25,17 +25,34 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const isMounted = useRef(true);
 
   // Navigate based on user role when user state updates
   useEffect(() => {
-    if (user && !authLoading) {
-      const destination =
-        user.role === "admin" ? ROUTES.ADMIN.DASHBOARD : ROUTES.CHAUFFEUR.HOME;
-      router.replace(destination);
+    // Add mounted check and better validation
+    if (isMounted.current && user && !authLoading && user.role) {
+      try {
+        const destination =
+          user.role === "admin"
+            ? ROUTES.ADMIN.DASHBOARD
+            : ROUTES.CHAUFFEUR.HOME;
+        router.replace(destination);
+      } catch (error) {
+        console.error("Navigation error:", error);
+      }
     }
   }, [user, authLoading, router]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const handleLogin = async () => {
+    if (!isMounted.current) return;
+
     if (!email.trim() || !password.trim()) {
       setError("Veuillez remplir tous les champs");
       return;
@@ -50,16 +67,22 @@ export default function Login() {
     setError("");
     try {
       const success = await login(email, password);
+      if (!isMounted.current) return; // Check if component is still mounted
+
       if (!success) {
         setError("Identifiants invalides");
       }
       // Navigation is handled in useEffect
     } catch (err: any) {
+      if (!isMounted.current) return; // Check if component is still mounted
       setError(err.message || "Échec de la connexion. Veuillez réessayer.");
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   };
+
   const getFriendlyErrorMessage = (error: string) => {
     switch (error) {
       case "Veuillez remplir tous les champs":
@@ -72,6 +95,7 @@ export default function Login() {
         return error; // Fallback to original error if no mapping exists
     }
   };
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -232,7 +256,7 @@ export default function Login() {
                 : "Se connecter"}
             </Text>
           </TouchableOpacity>
-          {/* 
+
           <View style={styles.divider}>
             <View
               style={[
@@ -303,7 +327,7 @@ export default function Login() {
                 Démo Chauffeur
               </Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
