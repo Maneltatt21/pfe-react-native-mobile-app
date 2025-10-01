@@ -200,7 +200,7 @@ export default function AdminDashboard() {
               <Text
                 style={[styles.tableCellHeader, { color: theme.colors.text }]}
               >
-                Year
+                Année
               </Text>
               <Text
                 style={[styles.tableCellHeader, { color: theme.colors.text }]}

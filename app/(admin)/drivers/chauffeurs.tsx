@@ -23,27 +23,18 @@ export default function ChauffeursPage() {
   const { theme } = useTheme();
   const router = useRouter();
 
-  const {
-    fetchDrivers,
-    deleteDriver,
-    updateDriver,
-    assigneDriver,
-    drivers,
-    isLoading,
-  } = useDriversStore();
+  const { fetchDrivers, deleteDriver, assigneDriver, drivers, isLoading } =
+    useDriversStore();
 
   const { cars, fetchCars } = useCarsStore();
 
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
-  const [form, setForm] = useState<{
-    vehicle_id: number | null;
-  }>({
+  const [form, setForm] = useState<{ vehicle_id: number | null }>({
     vehicle_id: null,
   });
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
@@ -78,17 +69,6 @@ export default function ChauffeursPage() {
     }
   };
 
-  // const handleCreate = async () => {
-  //   if (!form.name || !form.email) return;
-  //   await createDriver({
-  //     name: form.name,
-  //     email: form.email,
-  //     vehicle_id: form.vehicle_id,
-  //   });
-  //   setShowCreateModal(false);
-  // };
-
-  // Filter drivers by search text
   const filteredDrivers = drivers.filter(
     (d) =>
       d.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -98,7 +78,7 @@ export default function ChauffeursPage() {
   return (
     <Container>
       <BackHeader title="Chauffeurs" />
-      {/* Search + Create */}
+
       <View
         style={{
           flexDirection: "row",
@@ -126,15 +106,13 @@ export default function ChauffeursPage() {
         </View>
 
         <TouchableOpacity
-          onPress={() => {
-            setForm({ vehicle_id: null });
-            setShowCreateModal(true);
-          }}
+          onPress={() => router.push("/(admin)/drivers/add-driver")}
           style={[styles.newButton, { backgroundColor: theme.colors.primary }]}
         >
           <Text style={styles.newButtonText}>+ Nouveau</Text>
         </TouchableOpacity>
       </View>
+
       {isLoading ? (
         <Text style={{ color: theme.colors.text, marginTop: 20 }}>
           Chargement...
@@ -194,6 +172,7 @@ export default function ChauffeursPage() {
           contentContainerStyle={{ paddingTop: 10, paddingBottom: 30 }}
         />
       )}
+
       {/* Delete Modal */}
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -223,6 +202,7 @@ export default function ChauffeursPage() {
           </View>
         </View>
       </Modal>
+
       {/* Update / Assign Vehicle Modal */}
       <Modal visible={showUpdateModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -277,7 +257,6 @@ export default function ChauffeursPage() {
     </Container>
   );
 }
-
 const styles = StyleSheet.create({
   input: {
     borderWidth: 1,

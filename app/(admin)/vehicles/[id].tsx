@@ -77,6 +77,7 @@ export default function VehicleDetailPage() {
         year: parseInt(editYear, 10),
         model: editModel,
         registration_number: car?.registration_number!,
+        type: car?.type!,
       });
       setEditVisible(false);
     } catch (err) {

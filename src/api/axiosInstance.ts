@@ -87,16 +87,16 @@ axiosInstance.interceptors.request.use(
       console.error("Auth token error:", e);
     }
 
-    // Detailed request logging
-    console.log("🚀 AXIOS REQUEST:", {
-      url: `${config.baseURL}${config.url}`,
-      method: config.method?.toUpperCase(),
-      headers: config.headers,
-      dataType:
-        config.data instanceof FormData ? "FormData" : typeof config.data,
-      hasData: !!config.data,
-      timeout: config.timeout,
-    });
+    // // Detailed request logging
+    // console.log("🚀 AXIOS REQUEST:", {
+    //   url: `${config.baseURL}${config.url}`,
+    //   method: config.method?.toUpperCase(),
+    //   headers: config.headers,
+    //   dataType:
+    //     config.data instanceof FormData ? "FormData" : typeof config.data,
+    //   hasData: !!config.data,
+    //   timeout: config.timeout,
+    // });
 
     // Log FormData content in detail
     if (config.data instanceof FormData) {
@@ -112,7 +112,7 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("❌ REQUEST INTERCEPTOR ERROR:", error);
+    // console.error("❌ REQUEST INTERCEPTOR ERROR:", error);
     return Promise.reject(error);
   }
 );
@@ -128,33 +128,33 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.error("❌ AXIOS RESPONSE ERROR:", {
-      name: error.name,
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        baseURL: error.config?.baseURL,
-        headers: error.config?.headers,
-      },
-      response: error.response
-        ? {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            data: error.response.data,
-            headers: error.response.headers,
-          }
-        : "NO_RESPONSE",
-      request: error.request
-        ? {
-            status: error.request.status,
-            responseURL: error.request.responseURL,
-            readyState: error.request.readyState,
-          }
-        : "NO_REQUEST",
-    });
+    // console.error("❌ AXIOS RESPONSE ERROR:", {
+    //   name: error.name,
+    //   message: error.message,
+    //   code: error.code,
+    //   stack: error.stack,
+    //   config: {
+    //     url: error.config?.url,
+    //     method: error.config?.method,
+    //     baseURL: error.config?.baseURL,
+    //     headers: error.config?.headers,
+    //   },
+    //   response: error.response
+    //     ? {
+    //         status: error.response.status,
+    //         statusText: error.response.statusText,
+    //         data: error.response.data,
+    //         headers: error.response.headers,
+    //       }
+    //     : "NO_RESPONSE",
+    //   request: error.request
+    //     ? {
+    //         status: error.request.status,
+    //         responseURL: error.request.responseURL,
+    //         readyState: error.request.readyState,
+    //       }
+    //     : "NO_REQUEST",
+    // });
 
     if (error.response?.status === 401) {
       await AsyncStorage.multiRemove(["auth-storage", "authToken", "user"]);

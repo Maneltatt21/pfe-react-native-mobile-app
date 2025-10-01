@@ -89,6 +89,7 @@ export interface EditCar {
   registration_number: string;
   model: string;
   year: number;
+  type: "sec" | "frigo";
 }
 
 // CreateCarDocument interface

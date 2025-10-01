@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import axiosInstance from "../api/axiosInstance";
+import { Vehicle } from "../models/car.model";
 
 export interface Document {
   id: number;
@@ -18,13 +19,13 @@ export interface Maintenance {
   notes?: string;
 }
 
-export interface Vehicle {
-  id: number;
-  registration_number: string;
-  model: string;
-  year: number;
-  status: string;
-}
+// export interface Vehicle {
+//   id: number;
+//   registration_number: string;
+//   model: string;
+//   year: number;
+//   status: string;
+// }
 
 export interface User {
   id: number;
@@ -59,11 +60,14 @@ export const useDriverStore = create<DriverState>()(
         set({ isLoading: true, errors: [] });
         try {
           const res = await axiosInstance.get(`/user`);
-          const vehicleRes = await axiosInstance.get(`/my-vehicle`);
+          let vehicleData: Vehicle | null = null;
 
-          const vehicleData = vehicleRes.data?.vehicle;
-
-          console.log("vehicle:", JSON.stringify(vehicleData, null, 2));
+          try {
+            const vehicleRes = await axiosInstance.get(`/my-vehicle`);
+            vehicleData = vehicleRes.data?.vehicle ?? null;
+          } catch (vehicleErr) {
+            vehicleData = null; // safely fallback
+          }
 
           set({
             driver: res.data.user,
@@ -82,8 +86,6 @@ export const useDriverStore = create<DriverState>()(
                 notes: m.notes,
               })) ?? [],
           });
-
-          console.log("store driver:", get().driver);
         } catch (err: any) {
           set((state) => ({
             errors: [
